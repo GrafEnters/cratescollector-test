@@ -259,7 +259,23 @@ public class InventoryUI : MonoBehaviour
             }
         }
 
-        Vector3 dropPosition = playerTransform.position + playerTransform.forward * 2f + Vector3.up * 0.5f;
+        if (playerTransform == null) return;
+
+        Camera mainCamera = Camera.main;
+        Vector3 forwardDirection = Vector3.forward;
+        
+        if (mainCamera != null)
+        {
+            forwardDirection = mainCamera.transform.forward;
+            forwardDirection.y = 0f;
+            forwardDirection.Normalize();
+        }
+        else
+        {
+            forwardDirection = playerTransform.forward;
+        }
+
+        Vector3 dropPosition = playerTransform.position + forwardDirection * 2f + Vector3.up * 0.5f;
         inventory.DropItem(slotIndex, dropPosition);
     }
 

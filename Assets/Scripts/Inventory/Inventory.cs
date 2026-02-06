@@ -118,10 +118,11 @@ public class Inventory : MonoBehaviour
         if (slots[slotIndex].IsEmpty()) return false;
 
         ItemData item = slots[slotIndex].item;
-        int quantity = slots[slotIndex].quantity;
+        int quantityToDrop = 1;
 
         GameObject droppedItem = GameObject.CreatePrimitive(PrimitiveType.Cube);
         droppedItem.transform.position = position;
+        droppedItem.transform.localScale = Vector3.one * 0.5f;
         droppedItem.name = item.name;
 
         MeshRenderer renderer = droppedItem.GetComponent<MeshRenderer>();
@@ -138,7 +139,7 @@ public class Inventory : MonoBehaviour
             collider.isTrigger = true;
         }
 
-        RemoveItem(slotIndex, quantity);
+        RemoveItem(slotIndex, quantityToDrop);
         return true;
     }
 }
