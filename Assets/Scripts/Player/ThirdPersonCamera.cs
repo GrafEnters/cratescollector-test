@@ -42,6 +42,16 @@ public class ThirdPersonCamera : MonoBehaviour
 
     private void HandleRotation()
     {
+        bool isInventoryBlocking = ConfigManager.Config != null && ConfigManager.Config.IsInventoryBlockingView;
+        if (isInventoryBlocking)
+        {
+            InventoryUI inventoryUI = FindObjectOfType<InventoryUI>();
+            if (inventoryUI != null && inventoryUI.IsOpen())
+            {
+                return;
+            }
+        }
+
         float rotationSpeed = ConfigManager.Config != null ? ConfigManager.Config.cameraRotationSpeed : 2f;
         float minVerticalAngle = ConfigManager.Config != null ? ConfigManager.Config.cameraMinVerticalAngle : -30f;
         float maxVerticalAngle = ConfigManager.Config != null ? ConfigManager.Config.cameraMaxVerticalAngle : 60f;

@@ -3,6 +3,8 @@ using UnityEngine;
 [CreateAssetMenu(fileName = "MainGameConfig", menuName = "Game/MainGameConfig")]
 public class MainGameConfig : ScriptableObject
 {
+    public bool IsInventoryBlockingView = true;
+
     [Header("Player")]
     public float playerMoveSpeed = 5f;
     public float playerRotationSpeed = 10f;

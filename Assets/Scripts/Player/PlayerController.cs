@@ -84,7 +84,15 @@ public class PlayerController : MonoBehaviour
 
     private void HandleMovement()
     {
-        
+        bool isInventoryBlocking = ConfigManager.Config != null && ConfigManager.Config.IsInventoryBlockingView;
+        if (isInventoryBlocking)
+        {
+            InventoryUI inventoryUI = FindObjectOfType<InventoryUI>();
+            if (inventoryUI != null && inventoryUI.IsOpen())
+            {
+                return;
+            }
+        }
 
         if (cameraTransform == null)
         {

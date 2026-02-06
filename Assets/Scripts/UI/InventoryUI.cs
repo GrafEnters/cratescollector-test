@@ -210,6 +210,11 @@ public class InventoryUI : MonoBehaviour
         return inventory;
     }
 
+    public bool IsOpen()
+    {
+        return isOpen;
+    }
+
     public int GetSlotIndexFromElement(VisualElement element)
     {
         if (element == null) return -1;

@@ -181,6 +181,17 @@ public class ItemPickup : MonoBehaviour
     {
         if (hintElement == null || !uiReady || uiDocument == null) return;
 
+        bool isInventoryBlocking = ConfigManager.Config != null && ConfigManager.Config.IsInventoryBlockingView;
+        if (isInventoryBlocking)
+        {
+            InventoryUI inventoryUI = FindObjectOfType<InventoryUI>();
+            if (inventoryUI != null && inventoryUI.IsOpen())
+            {
+                hintElement.style.display = DisplayStyle.None;
+                return;
+            }
+        }
+
         if (nearbyItem != null && Camera.main != null)
         {
             float hintHeight = ConfigManager.Config != null ? ConfigManager.Config.pickupHintHeight : 0.75f;
