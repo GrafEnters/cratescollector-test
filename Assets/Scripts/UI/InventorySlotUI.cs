@@ -127,9 +127,11 @@ public class InventorySlotUI {
 
         Inventory inventory = _inventoryUI.GetInventory();
         if (inventory != null) {
+            bool isOutsideInventory = !_inventoryUI.IsElementInsideInventory(targetElement);
+
             if (targetSlotIndex >= 0 && targetSlotIndex != _slotIndex) {
                 inventory.MoveItem(_slotIndex, targetSlotIndex);
-            } else if (targetSlotIndex < 0) {
+            } else if (targetSlotIndex < 0 && isOutsideInventory) {
                 _inventoryUI.DropItemStack(_slotIndex);
             }
         }

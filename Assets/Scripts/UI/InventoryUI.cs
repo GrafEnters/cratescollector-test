@@ -263,6 +263,23 @@ public class InventoryUI : MonoBehaviour {
         return -1;
     }
 
+    public bool IsElementInsideInventory(VisualElement element) {
+        if (_inventoryWindow == null || element == null) {
+            return false;
+        }
+
+        VisualElement current = element;
+        while (current != null) {
+            if (current == _inventoryWindow) {
+                return true;
+            }
+
+            current = current.parent;
+        }
+
+        return false;
+    }
+
     public void DropItem(int slotIndex) {
         if (_inventory == null) {
             return;
