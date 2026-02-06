@@ -4,11 +4,11 @@ using UnityEngine.InputSystem;
 public class ItemPickup : MonoBehaviour {
     [SerializeField]
     private LayerMask _itemLayer = -1;
-    [SerializeField]
-    private Inventory _inventory;
+
     [SerializeField]
     private ItemSpawner _itemSpawner;
-    [SerializeField]
+
+    private Inventory _inventory;
     private InventoryFullNotification _notification;
     private ItemDetector _itemDetector;
     private ItemOutlineManager _outlineManager;
@@ -21,17 +21,10 @@ public class ItemPickup : MonoBehaviour {
     private void Awake() {
         _itemDetector = DIContainer.Instance.Get<IItemDetector>() as ItemDetector;
         _outlineManager = DIContainer.Instance.Get<IItemOutlineManager>() as ItemOutlineManager;
+        _inventory = GetComponent<Inventory>();
         _hintUI = GetComponent<ItemPickupHintUI>();
+        _notification = GetComponent<InventoryFullNotification>();
         _configProvider = DIContainer.Instance.Get<IConfigProvider>() as ConfigProvider;
-
-        if (_notification == null) {
-            _notification = GetComponent<InventoryFullNotification>();
-            if (_notification == null) {
-                GameObject notificationObject = new("InventoryFullNotification");
-                notificationObject.transform.SetParent(transform);
-                _notification = notificationObject.AddComponent<InventoryFullNotification>();
-            }
-        }
 
         _interactAction = new InputAction("Interact", InputActionType.Button, "<Keyboard>/e");
     }
@@ -71,9 +64,7 @@ public class ItemPickup : MonoBehaviour {
     }
 
     private void UpdateHint() {
-        if (_hintUI != null) {
-            _hintUI.UpdateHint(_nearbyItem);
-        }
+        _hintUI.UpdateHint(_nearbyItem);
     }
 
     private void OnInteract(InputAction.CallbackContext context) {
@@ -96,9 +87,7 @@ public class ItemPickup : MonoBehaviour {
 
             _nearbyItem = null;
         } else {
-            if (_notification != null) {
-                _notification.Show();
-            }
+            _notification.Show();
         }
     }
 
