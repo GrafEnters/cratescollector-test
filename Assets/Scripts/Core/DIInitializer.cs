@@ -22,29 +22,11 @@ public class DIInitializer : MonoBehaviour {
 
     private void Awake() {
         DIContainer container = DIContainer.Instance;
-
-        if (_configProvider != null) {
-            container.Register<IConfigProvider>(_configProvider);
-        }
-
-        if (_itemFactory != null) {
-            container.Register<IItemFactory>(_itemFactory);
-        }
-
-        if (_inventoryStateProvider != null) {
-            container.Register<IInventoryStateProvider>(_inventoryStateProvider);
-        }
-
-        if (_itemDetector != null) {
-            container.Register<IItemDetector>(_itemDetector);
-        }
-
-        if (_itemOutlineManager != null) {
-            container.Register<IItemOutlineManager>(_itemOutlineManager);
-        }
-
-        if (_itemPool != null) {
-            container.Register(_itemPool);
-        }
+        container.Register<IConfigProvider>(_configProvider);
+        container.Register<IItemFactory>(_itemFactory);
+        container.Register<IInventoryStateProvider>(_inventoryStateProvider);
+        container.Register<IItemDetector>(_itemDetector);
+        container.Register<IItemOutlineManager>(_itemOutlineManager);
+        container.Register(_itemPool);
     }
 }

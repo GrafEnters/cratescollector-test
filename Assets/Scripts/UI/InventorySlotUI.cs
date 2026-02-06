@@ -37,24 +37,13 @@ public class InventorySlotUI {
     private VisualElement _dragGhost;
 
     private void OnPointerDown(PointerDownEvent evt) {
-        if (_inventoryUI == null || _slotElement == null) {
-            return;
-        }
-
         if (evt.button == 1) {
-            _inventoryUI.DropItem(_slotIndex);
+            _inventoryUI?.DropItem(_slotIndex);
             return;
         }
 
-        Inventory inventory = _inventoryUI.GetInventory();
-        if (inventory == null) {
-            return;
-        }
-
-        InventorySlot slot = inventory.GetSlot(_slotIndex);
-        if (slot == null || slot.IsEmpty()) {
-            return;
-        }
+        InventorySlot slot = _inventoryUI?.GetInventory()?.GetSlot(_slotIndex);
+        if (slot?.IsEmpty() != false) return;
 
         _isDragging = true;
         _dragStartPosition = evt.position;
@@ -93,20 +82,15 @@ public class InventorySlotUI {
     }
 
     private void HandleDragMove(Vector2 position, IPanel panel) {
-        if (panel == null) {
-            return;
-        }
+        if (panel == null) return;
 
         UpdateDragGhostPosition(position);
-
         VisualElement elementUnderPointer = PickIgnoringGhost(position, panel);
         ClearDragOverStates();
 
-        if (elementUnderPointer != null) {
-            VisualElement slotElement = FindSlotElement(elementUnderPointer);
-            if (slotElement != null && slotElement != _slotElement) {
-                slotElement.AddToClassList("drag-over");
-            }
+        VisualElement slotElement = FindSlotElement(elementUnderPointer);
+        if (slotElement != null && slotElement != _slotElement) {
+            slotElement.AddToClassList("drag-over");
         }
     }
 
@@ -130,19 +114,13 @@ public class InventorySlotUI {
 
         VisualElement targetElement = PickIgnoringGhost(position, panel);
         VisualElement targetSlot = FindSlotElement(targetElement);
-
-        int targetSlotIndex = -1;
-        if (targetSlot != null) {
-            targetSlotIndex = _inventoryUI.GetSlotIndexFromElement(targetSlot);
-        }
+        int targetSlotIndex = targetSlot != null ? _inventoryUI.GetSlotIndexFromElement(targetSlot) : -1;
 
         Inventory inventory = _inventoryUI.GetInventory();
         if (inventory != null) {
-            bool isOutsideInventory = !_inventoryUI.IsElementInsideInventory(targetElement);
-
             if (targetSlotIndex >= 0 && targetSlotIndex != _slotIndex) {
                 inventory.MoveItem(_slotIndex, targetSlotIndex);
-            } else if (targetSlotIndex < 0 && isOutsideInventory) {
+            } else if (targetSlotIndex < 0 && !_inventoryUI.IsElementInsideInventory(targetElement)) {
                 _inventoryUI.DropItemStack(_slotIndex);
             }
         }
@@ -151,17 +129,11 @@ public class InventorySlotUI {
     }
 
     private VisualElement PickIgnoringGhost(Vector2 position, IPanel panel) {
-        if (panel == null) {
-            return null;
-        }
-
-        if (_dragGhost == null) {
-            return panel.Pick(position);
-        }
+        if (panel == null) return null;
+        if (_dragGhost == null) return panel.Pick(position);
 
         StyleLength savedLeft = _dragGhost.style.left;
         StyleLength savedTop = _dragGhost.style.top;
-        
         _dragGhost.style.left = -10000f;
         _dragGhost.style.top = -10000f;
 
@@ -169,52 +141,27 @@ public class InventorySlotUI {
 
         _dragGhost.style.left = savedLeft;
         _dragGhost.style.top = savedTop;
-
         return picked;
     }
 
     private VisualElement FindSlotElement(VisualElement element) {
-        if (element == null) {
-            return null;
+        while (element != null) {
+            if (element.ClassListContains("inventory-slot")) return element;
+            element = element.parent;
         }
-
-        VisualElement current = element;
-        while (current != null) {
-            if (current.ClassListContains("inventory-slot")) {
-                return current;
-            }
-
-            current = current.parent;
-        }
-
         return null;
     }
 
     private void ClearDragOverStates() {
-        if (_slotElement == null) {
-            return;
-        }
-
-        VisualElement grid = FindInventoryGrid();
-        if (grid != null) {
-            grid.Query(className: "drag-over").ForEach(elem => elem.RemoveFromClassList("drag-over"));
-        }
+        FindInventoryGrid()?.Query(className: "drag-over").ForEach(elem => elem.RemoveFromClassList("drag-over"));
     }
 
     private VisualElement FindInventoryGrid() {
-        if (_slotElement == null) {
-            return null;
-        }
-
         VisualElement current = _slotElement;
         while (current != null) {
-            if (current.ClassListContains("inventory-grid")) {
-                return current;
-            }
-
+            if (current.ClassListContains("inventory-grid")) return current;
             current = current.parent;
         }
-
         return null;
     }
 
@@ -222,22 +169,17 @@ public class InventorySlotUI {
         _isDragging = false;
         DestroyDragGhost();
 
-        if (_slotElement != null) {
-            _slotElement.RemoveFromClassList("dragging");
+        _slotElement?.RemoveFromClassList("dragging");
+        VisualElement root = _slotElement?.panel?.visualTree;
+        if (root != null) {
+            root.UnregisterCallback<PointerMoveEvent>(OnGlobalPointerMove);
+            root.UnregisterCallback<PointerUpEvent>(OnGlobalPointerUp);
+        }
 
-            if (_slotElement.panel != null) {
-                VisualElement root = _slotElement.panel.visualTree;
-                if (root != null) {
-                    root.UnregisterCallback<PointerMoveEvent>(OnGlobalPointerMove);
-                    root.UnregisterCallback<PointerUpEvent>(OnGlobalPointerUp);
-                }
-            }
-
-            if (_capturedPointerId >= 0 && _slotElement.panel != null) {
-                try {
-                    _slotElement.ReleasePointer(_capturedPointerId);
-                } catch { }
-            }
+        if (_capturedPointerId >= 0) {
+            try {
+                _slotElement?.ReleasePointer(_capturedPointerId);
+            } catch { }
         }
 
         _capturedPointerId = -1;
@@ -245,24 +187,11 @@ public class InventorySlotUI {
     }
 
     private void CreateDragGhost(Vector2 position) {
-        if (_slotElement == null || _slotElement.panel == null) {
-            return;
-        }
+        VisualElement root = _slotElement?.panel?.visualTree;
+        if (root == null) return;
 
-        VisualElement root = _slotElement.panel.visualTree;
-        if (root == null) {
-            return;
-        }
-
-        Inventory inventory = _inventoryUI.GetInventory();
-        if (inventory == null) {
-            return;
-        }
-
-        InventorySlot slot = inventory.GetSlot(_slotIndex);
-        if (slot == null || slot.IsEmpty()) {
-            return;
-        }
+        InventorySlot slot = _inventoryUI?.GetInventory()?.GetSlot(_slotIndex);
+        if (slot?.IsEmpty() != false) return;
 
         float iconWidth = _iconElement.resolvedStyle.width;
         float iconHeight = _iconElement.resolvedStyle.height;
@@ -307,34 +236,20 @@ public class InventorySlotUI {
     }
 
     private void UpdateDragGhostPosition(Vector2 position) {
-        if (_dragGhost == null) {
-            return;
-        }
-
+        if (_dragGhost == null) return;
         Vector2 ghostPosition = position - _dragOffset;
         _dragGhost.style.left = ghostPosition.x;
         _dragGhost.style.top = ghostPosition.y;
     }
 
     private void DestroyDragGhost() {
-        if (_dragGhost != null) {
-            if (_dragGhost.parent != null) {
-                _dragGhost.parent.Remove(_dragGhost);
-            }
-            _dragGhost = null;
-        }
-
-        if (_iconElement != null) {
-            _iconElement.style.opacity = 1f;
-        }
+        _dragGhost?.parent?.Remove(_dragGhost);
+        _dragGhost = null;
+        _iconElement.style.opacity = 1f;
     }
 
     public void UpdateSlot(InventorySlot slot) {
-        if (_slotElement == null || _iconElement == null || _quantityLabel == null) {
-            return;
-        }
-
-        if (slot == null || slot.IsEmpty()) {
+        if (slot?.IsEmpty() != false) {
             _slotElement.AddToClassList("empty");
             _iconElement.style.display = DisplayStyle.None;
             _quantityLabel.text = "";
@@ -342,13 +257,8 @@ public class InventorySlotUI {
             _slotElement.RemoveFromClassList("empty");
             _iconElement.style.display = DisplayStyle.Flex;
             _iconElement.style.backgroundColor = slot.Item.Color;
-
-            if (slot.Item.Stackable) {
-                _quantityLabel.text = $"{slot.Quantity}/{slot.Item.MaxStack}";
-                _quantityLabel.style.display = DisplayStyle.Flex;
-            } else {
-                _quantityLabel.style.display = DisplayStyle.None;
-            }
+            _quantityLabel.text = slot.Item.Stackable ? $"{slot.Quantity}/{slot.Item.MaxStack}" : "";
+            _quantityLabel.style.display = slot.Item.Stackable ? DisplayStyle.Flex : DisplayStyle.None;
         }
     }
 }

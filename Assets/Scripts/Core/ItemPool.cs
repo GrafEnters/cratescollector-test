@@ -9,17 +9,8 @@ public class ItemPool : MonoBehaviour {
     private int _poolSize;
 
     private void Awake() {
-        if (!DIContainer.Instance.TryGet<IConfigProvider>(out _configProvider)) {
-            Debug.LogError("IConfigProvider not found in DI container");
-            return;
-        }
-
-        MainGameConfig config = _configProvider.GetConfig();
-        if (config == null) {
-            Debug.LogError("Failed to get MainGameConfig from ConfigProvider");
-            return;
-        }
-        _poolSize = config.ItemPoolSize;
+        DIContainer.Instance.TryGet<IConfigProvider>(out _configProvider);
+        _poolSize = _configProvider?.GetConfig()?.ItemPoolSize ?? 10;
 
         GameObject poolParentObject = new("ItemPool");
         _poolParent = poolParentObject.transform;
@@ -52,15 +43,11 @@ public class ItemPool : MonoBehaviour {
     }
 
     private GameObject CreateItemObject() {
-        MainGameConfig config = _configProvider?.GetConfig();
-        float itemScale = config != null ? config.ItemScale : 0.5f;
+        float itemScale = _configProvider?.GetConfig()?.ItemScale ?? 0.5f;
 
         GameObject itemObject = GameObject.CreatePrimitive(PrimitiveType.Cube);
         itemObject.transform.localScale = Vector3.one * itemScale;
-
-        Collider collider = itemObject.GetComponent<Collider>();
-        collider.isTrigger = true;
-
+        itemObject.GetComponent<Collider>().isTrigger = true;
         itemObject.AddComponent<CollectableItem>();
         itemObject.AddComponent<ItemOutline>();
 
@@ -68,9 +55,7 @@ public class ItemPool : MonoBehaviour {
     }
 
     public void Return(GameObject itemObject) {
-        if (itemObject == null) {
-            return;
-        }
+        if (itemObject == null) return;
 
         itemObject.SetActive(false);
         itemObject.transform.SetParent(_poolParent);
@@ -78,15 +63,8 @@ public class ItemPool : MonoBehaviour {
         itemObject.transform.localRotation = Quaternion.identity;
         itemObject.name = "PooledItem";
 
-        CollectableItem collectable = itemObject.GetComponent<CollectableItem>();
-        if (collectable != null) {
-            collectable.SetItemData(null);
-        }
-
-        ItemOutline outline = itemObject.GetComponent<ItemOutline>();
-        if (outline != null) {
-            outline.HideOutline();
-        }
+        itemObject.GetComponent<CollectableItem>()?.SetItemData(null);
+        itemObject.GetComponent<ItemOutline>()?.HideOutline();
 
         if (_pool.Count < _poolSize) {
             _pool.Enqueue(itemObject);

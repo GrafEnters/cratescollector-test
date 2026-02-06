@@ -9,18 +9,9 @@ public class ItemSpawner : MonoBehaviour {
     private Transform _playerTransform;
 
     private void Awake() {
-        if (!DIContainer.Instance.TryGet<IItemFactory>(out _itemFactory)) {
-            Debug.LogError("IItemFactory not found in DI container");
-        }
-
-        if (!DIContainer.Instance.TryGet<IConfigProvider>(out _configProvider)) {
-            Debug.LogError("IConfigProvider not found in DI container");
-        }
-
-        GameObject player = GameObject.FindGameObjectWithTag("Player");
-        if (player != null) {
-            _playerTransform = player.transform;
-        }
+        DIContainer.Instance.TryGet<IItemFactory>(out _itemFactory);
+        DIContainer.Instance.TryGet<IConfigProvider>(out _configProvider);
+        _playerTransform = GameObject.FindGameObjectWithTag("Player")?.transform;
     }
 
     private void Start() {
@@ -30,16 +21,10 @@ public class ItemSpawner : MonoBehaviour {
 
     private void LoadItemsData() {
         TextAsset jsonFile = Resources.Load<TextAsset>("ItemsData");
-        if (jsonFile == null) {
-            Debug.LogError("ItemsData.json not found in Resources folder!");
-            return;
-        }
+        if (jsonFile == null) return;
 
         ItemsDataContainer container = JsonUtility.FromJson<ItemsDataContainer>(jsonFile.text);
-        if (container == null || container.Items == null) {
-            Debug.LogError("Failed to parse ItemsData.json!");
-            return;
-        }
+        if (container?.Items == null) return;
 
         foreach (ItemDataJson itemJson in container.Items) {
             _itemsData.Add(itemJson.ToItemData());
@@ -47,47 +32,26 @@ public class ItemSpawner : MonoBehaviour {
     }
 
     private void SpawnItems() {
-        if (_itemsData.Count == 0) {
-            Debug.LogError("No items data loaded!");
-            return;
-        }
+        if (_itemsData.Count == 0 || _configProvider == null) return;
 
-        if (_configProvider == null) {
-            Debug.LogError("ConfigProvider is null");
-            return;
-        }
+        MainGameConfig config = _configProvider.GetConfig();
+        if (config == null) return;
 
         List<Vector3> spawnedPositions = new();
-        int spawnedCount = 0;
-        MainGameConfig config = _configProvider.GetConfig();
-        if (config == null) {
-            Debug.LogError("MainGameConfig is null");
-            return;
-        }
         int itemCount = config.ItemSpawnerItemCount;
 
-        while (spawnedCount < itemCount && spawnedCount < _itemsData.Count) {
+        for (int spawnedCount = 0; spawnedCount < itemCount && spawnedCount < _itemsData.Count; spawnedCount++) {
             Vector3 position = GetRandomPosition(spawnedPositions);
-            if (position != Vector3.zero) {
-                ItemData itemData = _itemsData[spawnedCount % _itemsData.Count];
-                SpawnItem(itemData, position);
-                spawnedPositions.Add(position);
-                spawnedCount++;
-            } else {
-                break;
-            }
+            if (position == Vector3.zero) break;
+
+            SpawnItem(_itemsData[spawnedCount % _itemsData.Count], position);
+            spawnedPositions.Add(position);
         }
     }
 
     private Vector3 GetRandomPosition(List<Vector3> existingPositions, Vector3? playerPosition = null) {
-        if (_configProvider == null) {
-            return Vector3.zero;
-        }
-
-        MainGameConfig config = _configProvider.GetConfig();
-        if (config == null) {
-            return Vector3.zero;
-        }
+        MainGameConfig config = _configProvider?.GetConfig();
+        if (config == null) return Vector3.zero;
 
         float spawnRadius = config.ItemSpawnerRadius;
         float minDistance = config.ItemSpawnerMinDistance;
@@ -124,12 +88,9 @@ public class ItemSpawner : MonoBehaviour {
     }
 
     private void SpawnItem(ItemData itemData, Vector3 position) {
-        GameObject itemObject = _itemFactory.CreateItem(itemData, position);
-        if (itemObject != null) {
-            CollectableItem collectable = itemObject.GetComponent<CollectableItem>();
-            if (collectable != null) {
-                _activeItems.Add(collectable);
-            }
+        CollectableItem collectable = _itemFactory?.CreateItem(itemData, position)?.GetComponent<CollectableItem>();
+        if (collectable != null) {
+            _activeItems.Add(collectable);
         }
     }
 
@@ -143,11 +104,7 @@ public class ItemSpawner : MonoBehaviour {
     }
 
     private Vector3? GetPlayerPosition() {
-        if (_playerTransform != null) {
-            return _playerTransform.position;
-        }
-
-        return null;
+        return _playerTransform?.position;
     }
 
     private List<Vector3> GetAllItemPositions() {

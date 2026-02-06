@@ -26,22 +26,10 @@ public class InventoryUI : MonoBehaviour {
     private Inventory _inventoryReference;
 
     private void Awake() {
-        _inventory = GetComponent<Inventory>();
-        if (_inventory == null && _inventoryReference != null) {
-            _inventory = _inventoryReference;
-        }
-
-        if (_uiDocument == null) {
-            _uiDocument = gameObject.AddComponent<UIDocument>();
-        }
-
-        if (_inventoryWindowAsset == null) {
-            _inventoryWindowAsset = Resources.Load<VisualTreeAsset>("InventoryWindow");
-        }
-
-        if (_inventoryWindowStyle == null) {
-            _inventoryWindowStyle = Resources.Load<StyleSheet>("InventoryWindow");
-        }
+        _inventory = GetComponent<Inventory>() ?? _inventoryReference;
+        _uiDocument = _uiDocument ?? gameObject.AddComponent<UIDocument>();
+        _inventoryWindowAsset = _inventoryWindowAsset ?? Resources.Load<VisualTreeAsset>("InventoryWindow");
+        _inventoryWindowStyle = _inventoryWindowStyle ?? Resources.Load<StyleSheet>("InventoryWindow");
     }
 
     private void Start() {
@@ -54,36 +42,18 @@ public class InventoryUI : MonoBehaviour {
     private IEnumerator SetupUICoroutine() {
         yield return null;
 
-        if (_uiDocument == null) {
-            _uiDocument = GetComponent<UIDocument>();
-        }
-
-        if (_uiDocument == null) {
-            Debug.LogError("UIDocument component not found!");
-            yield break;
-        }
-
-        VisualTreeAsset asset = _inventoryWindowAsset;
-        if (asset == null) {
-            asset = Resources.Load<VisualTreeAsset>("InventoryWindow");
-        }
-
-        if (asset == null) {
-            Debug.LogError("Failed to load InventoryWindow UXML from Resources!");
-            yield break;
-        }
+        _uiDocument = _uiDocument ?? GetComponent<UIDocument>();
+        VisualTreeAsset asset = _inventoryWindowAsset ?? Resources.Load<VisualTreeAsset>("InventoryWindow");
+        
+        if (_uiDocument == null || asset == null) yield break;
 
         _uiDocument.visualTreeAsset = asset;
-
         yield return null;
         yield return null;
 
-        if (_uiDocument.rootVisualElement == null) {
-            Debug.LogError("Failed to create root visual element after setting visualTreeAsset!");
-            yield break;
+        if (_uiDocument.rootVisualElement != null) {
+            SetupUI();
         }
-
-        SetupUI();
     }
 
     private void Update() {
@@ -93,46 +63,22 @@ public class InventoryUI : MonoBehaviour {
     }
 
     private void SetupUI() {
-        if (_uiDocument == null || _uiDocument.rootVisualElement == null) {
-            Debug.LogError("UIDocument or rootVisualElement is null!");
-            return;
-        }
+        if (_uiDocument?.rootVisualElement == null) return;
 
-        StyleSheet style = _inventoryWindowStyle;
-        if (style == null) {
-            style = Resources.Load<StyleSheet>("InventoryWindow");
-        }
-
+        StyleSheet style = _inventoryWindowStyle ?? Resources.Load<StyleSheet>("InventoryWindow");
         if (style != null) {
             _uiDocument.rootVisualElement.styleSheets.Add(style);
         }
 
-        _inventoryWindow = _uiDocument.rootVisualElement.Q<VisualElement>("InventoryWindow");
-        if (_inventoryWindow == null) {
-            if (_uiDocument.rootVisualElement.childCount > 0) {
-                _inventoryWindow = _uiDocument.rootVisualElement[0];
-                if (_inventoryWindow != null && _inventoryWindow.name != "InventoryWindow") {
-                    _inventoryWindow.name = "InventoryWindow";
-                }
-            }
-
-            if (_inventoryWindow == null) {
-                Debug.LogError("InventoryWindow not found in UXML! Root element: " + _uiDocument.rootVisualElement.name);
-                if (_uiDocument.rootVisualElement.childCount > 0) {
-                    Debug.LogError("Available children: " + string.Join(", ", _uiDocument.rootVisualElement.Children().Select(c => c.name)));
-                }
-
-                return;
-            }
-        }
+        _inventoryWindow = _uiDocument.rootVisualElement.Q<VisualElement>("InventoryWindow") 
+            ?? (_uiDocument.rootVisualElement.childCount > 0 ? _uiDocument.rootVisualElement[0] : null);
+        
+        if (_inventoryWindow == null) return;
 
         VisualElement grid = _inventoryWindow.Q<VisualElement>("InventoryGrid");
-        if (grid == null) {
-            Debug.LogError("InventoryGrid not found in UXML!");
-            return;
-        }
+        if (grid == null) return;
 
-        int slotCount = _inventory != null ? _inventory.GetSlotCount() : 12;
+        int slotCount = _inventory?.GetSlotCount() ?? 12;
         _slotUIs = new InventorySlotUI[slotCount];
 
         for (int i = 0; i < slotCount; i++) {
@@ -143,10 +89,7 @@ public class InventoryUI : MonoBehaviour {
         }
 
         UpdateAllSlots();
-
-        if (_inventoryWindow != null) {
-            _inventoryWindow.AddToClassList("visible");
-        }
+        _inventoryWindow.AddToClassList("visible");
 
         if (_isOpen) {
             Cursor.lockState = CursorLockMode.None;
@@ -171,13 +114,8 @@ public class InventoryUI : MonoBehaviour {
     }
 
     private void SaveCursorPosition() {
-        if (Mouse.current != null && Mouse.current.enabled) {
-            _lastCursorPosition = Mouse.current.position.ReadValue();
-            _hasStoredCursorPosition = true;
-        } else {
-            _lastCursorPosition = Input.mousePosition;
-            _hasStoredCursorPosition = true;
-        }
+        _lastCursorPosition = Mouse.current?.enabled == true ? Mouse.current.position.ReadValue() : Input.mousePosition;
+        _hasStoredCursorPosition = true;
     }
 
     private void RestoreCursorPosition() {
@@ -210,22 +148,16 @@ public class InventoryUI : MonoBehaviour {
     }
 
     private void OnSlotChanged(int slotIndex) {
-        if (_slotUIs != null && slotIndex >= 0 && slotIndex < _slotUIs.Length) {
-            if (_inventory != null) {
-                InventorySlot slot = _inventory.GetSlot(slotIndex);
-                _slotUIs[slotIndex].UpdateSlot(slot);
-            }
+        if (slotIndex >= 0 && slotIndex < _slotUIs?.Length) {
+            _slotUIs[slotIndex].UpdateSlot(_inventory?.GetSlot(slotIndex));
         }
     }
 
     private void UpdateAllSlots() {
-        if (_inventory == null || _slotUIs == null) {
-            return;
-        }
+        if (_inventory == null || _slotUIs == null) return;
 
         for (int i = 0; i < _slotUIs.Length; i++) {
-            InventorySlot slot = _inventory.GetSlot(i);
-            _slotUIs[i].UpdateSlot(slot);
+            _slotUIs[i].UpdateSlot(_inventory.GetSlot(i));
         }
     }
 
@@ -238,106 +170,50 @@ public class InventoryUI : MonoBehaviour {
     }
 
     public int GetSlotIndexFromElement(VisualElement element) {
-        if (element == null) {
-            return -1;
-        }
-
-        string elementName = element.name;
-        if (elementName.StartsWith("Slot")) {
-            string indexStr = elementName.Substring(4);
-            if (int.TryParse(indexStr, out int index)) {
+        while (element != null) {
+            if (element.name.StartsWith("Slot") && int.TryParse(element.name.Substring(4), out int index)) {
                 return index;
             }
+            element = element.parent;
         }
-
-        VisualElement parent = element.parent;
-        while (parent != null) {
-            string parentName = parent.name;
-            if (parentName.StartsWith("Slot")) {
-                string indexStr = parentName.Substring(4);
-                if (int.TryParse(indexStr, out int index)) {
-                    return index;
-                }
-            }
-
-            parent = parent.parent;
-        }
-
         return -1;
     }
 
     public bool IsElementInsideInventory(VisualElement element) {
-        if (_inventoryWindow == null || element == null) {
-            return false;
+        while (element != null) {
+            if (element == _inventoryWindow) return true;
+            element = element.parent;
         }
-
-        VisualElement current = element;
-        while (current != null) {
-            if (current == _inventoryWindow) {
-                return true;
-            }
-
-            current = current.parent;
-        }
-
         return false;
     }
 
     public void DropItem(int slotIndex) {
-        if (_inventory == null) {
-            return;
-        }
-
-        InventorySlot slot = _inventory.GetSlot(slotIndex);
-        if (slot.IsEmpty()) {
-            return;
-        }
-
+        if (_inventory?.GetSlot(slotIndex)?.IsEmpty() != false) return;
         Vector3 dropPosition = CalculateDropPosition();
-        if (dropPosition == Vector3.zero) {
-            return;
+        if (dropPosition != Vector3.zero) {
+            _inventory.DropItem(slotIndex, dropPosition);
         }
-
-        _inventory.DropItem(slotIndex, dropPosition);
     }
 
     public void DropItemStack(int slotIndex) {
-        if (_inventory == null) {
-            return;
-        }
-
-        InventorySlot slot = _inventory.GetSlot(slotIndex);
-        if (slot.IsEmpty()) {
-            return;
-        }
-
+        InventorySlot slot = _inventory?.GetSlot(slotIndex);
+        if (slot?.IsEmpty() != false) return;
         Vector3 dropPosition = CalculateDropPosition();
-        if (dropPosition == Vector3.zero) {
-            return;
+        if (dropPosition != Vector3.zero) {
+            _inventory.DropItem(slotIndex, dropPosition, slot.Quantity);
         }
-
-        _inventory.DropItem(slotIndex, dropPosition, slot.Quantity);
     }
 
     private Vector3 CalculateDropPosition() {
-        Transform playerTransform = _inventory != null ? _inventory.transform : transform;
-
-        Vector3 forwardDirection = Vector3.forward;
+        Transform playerTransform = _inventory?.transform ?? transform;
         Camera mainCamera = Camera.main;
-        if (mainCamera != null) {
-            forwardDirection = mainCamera.transform.forward;
-            forwardDirection.y = 0f;
-            forwardDirection.Normalize();
-        } else {
-            forwardDirection = playerTransform.forward;
-        }
-
+        Vector3 forwardDirection = mainCamera != null ? mainCamera.transform.forward : playerTransform.forward;
+        forwardDirection.y = 0f;
+        forwardDirection.Normalize();
         return playerTransform.position + forwardDirection * 2f + Vector3.up * 0.5f;
     }
 
     private void OnDestroy() {
-        if (_inventory != null) {
-            _inventory.OnSlotChanged -= OnSlotChanged;
-        }
+        _inventory.OnSlotChanged -= OnSlotChanged;
     }
 }

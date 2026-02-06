@@ -5,10 +5,7 @@ public class InventorySlot {
     public ItemData Item;
     public int Quantity;
 
-    public InventorySlot() {
-        Item = null;
-        Quantity = 0;
-    }
+    public InventorySlot() { }
 
     public InventorySlot(ItemData item, int quantity) {
         Item = item;
@@ -20,15 +17,7 @@ public class InventorySlot {
     }
 
     public bool CanAdd(int amount) {
-        if (IsEmpty()) {
-            return false;
-        }
-
-        if (!Item.Stackable) {
-            return false;
-        }
-
-        return Quantity + amount <= Item.MaxStack;
+        return !IsEmpty() && Item.Stackable && Quantity + amount <= Item.MaxStack;
     }
 
     public void Add(int amount) {

@@ -29,9 +29,7 @@ public class PlayerController : MonoBehaviour {
         _cameraTransform = GetCameraTransform();
 
         _inventoryStateProvider = DIContainer.Instance.Get<IInventoryStateProvider>();
-        if (!DIContainer.Instance.TryGet<IConfigProvider>(out _configProvider)) {
-            Debug.LogError("IConfigProvider not found in DI container");
-        }
+        DIContainer.Instance.TryGet<IConfigProvider>(out _configProvider);
 
         _moveAction = new InputAction(type: InputActionType.Value);
         _moveAction.AddCompositeBinding("2DVector").With("Up", "<Keyboard>/w").With("Down", "<Keyboard>/s").With("Left", "<Keyboard>/a")
@@ -48,9 +46,9 @@ public class PlayerController : MonoBehaviour {
     }
 
     private void CacheConfigValues() {
-        _cachedConfig = _configProvider.GetConfig();
-        _cachedMoveSpeed = _cachedConfig.PlayerMoveSpeed;
-        _cachedRotationSpeed = _cachedConfig.PlayerRotationSpeed;
+        _cachedConfig = _configProvider?.GetConfig();
+        _cachedMoveSpeed = _cachedConfig?.PlayerMoveSpeed ?? 5f;
+        _cachedRotationSpeed = _cachedConfig?.PlayerRotationSpeed ?? 10f;
     }
 
     private void FindPlatformBounds() {
@@ -96,12 +94,7 @@ public class PlayerController : MonoBehaviour {
     }
 
     private void Update() {
-        if (_cachedConfig.IsInventoryBlockingView && _inventoryStateProvider != null) {
-            _isInventoryOpen = _inventoryStateProvider.IsInventoryOpen();
-        } else {
-            _isInventoryOpen = false;
-        }
-
+        _isInventoryOpen = _cachedConfig?.IsInventoryBlockingView == true && _inventoryStateProvider?.IsInventoryOpen() == true;
         HandleMovement();
         HandleRotation();
     }
@@ -133,8 +126,7 @@ public class PlayerController : MonoBehaviour {
         Vector3 moveDirection = CalculateMoveDirection(_moveInput, camera);
 
         if (moveDirection.magnitude > 0.1f) {
-            float moveSpeed = _cachedMoveSpeed > 0 ? _cachedMoveSpeed : 5f;
-            Vector3 move = moveDirection * moveSpeed;
+            Vector3 move = moveDirection * _cachedMoveSpeed;
             _velocity.x = move.x;
             _velocity.z = move.z;
         } else {
@@ -171,9 +163,8 @@ public class PlayerController : MonoBehaviour {
             Vector3 moveDirection = CalculateMoveDirection(_moveInput, camera);
 
             if (moveDirection.magnitude > 0.1f) {
-                float rotationSpeed = _cachedRotationSpeed > 0 ? _cachedRotationSpeed : 10f;
                 Quaternion targetRotation = Quaternion.LookRotation(moveDirection);
-                transform.rotation = Quaternion.Slerp(transform.rotation, targetRotation, rotationSpeed * Time.deltaTime);
+                transform.rotation = Quaternion.Slerp(transform.rotation, targetRotation, _cachedRotationSpeed * Time.deltaTime);
             }
         }
     }

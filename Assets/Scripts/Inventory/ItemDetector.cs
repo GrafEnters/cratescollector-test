@@ -2,8 +2,7 @@ using UnityEngine;
 
 public class ItemDetector : MonoBehaviour, IItemDetector {
     public CollectableItem FindNearestItem(Vector3 position, float distance, LayerMask layerMask) {
-        int layerMaskValue = layerMask.value != 0 ? layerMask.value : -1;
-        Collider[] colliders = Physics.OverlapSphere(position, distance, layerMaskValue);
+        Collider[] colliders = Physics.OverlapSphere(position, distance, layerMask.value != 0 ? layerMask.value : -1);
 
         CollectableItem closestItem = null;
         float closestDistance = float.MaxValue;

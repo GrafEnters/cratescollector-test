@@ -10,23 +10,10 @@ public class Inventory : MonoBehaviour {
     public event Action<int> OnSlotChanged;
 
     private void Awake() {
-        if (!DIContainer.Instance.TryGet<IConfigProvider>(out _configProvider)) {
-            Debug.LogError("IConfigProvider not found in DI container");
-            return;
-        }
+        DIContainer.Instance.TryGet<IConfigProvider>(out _configProvider);
+        DIContainer.Instance.TryGet<IItemFactory>(out _itemFactory);
 
-        if (!DIContainer.Instance.TryGet<IItemFactory>(out _itemFactory)) {
-            Debug.LogError("IItemFactory not found in DI container");
-            return;
-        }
-
-        MainGameConfig config = _configProvider.GetConfig();
-        if (config == null) {
-            Debug.LogError("MainGameConfig is null");
-            return;
-        }
-
-        int slotCount = config.InventorySlotCount;
+        int slotCount = _configProvider?.GetConfig()?.InventorySlotCount ?? 12;
         _slots = new InventorySlot[slotCount];
         for (int i = 0; i < slotCount; i++) {
             _slots[i] = new InventorySlot();
@@ -62,11 +49,7 @@ public class Inventory : MonoBehaviour {
     }
 
     public bool RemoveItem(int slotIndex, int quantity = 1) {
-        if (slotIndex < 0 || slotIndex >= _slots.Length) {
-            return false;
-        }
-
-        if (_slots[slotIndex].IsEmpty()) {
+        if (slotIndex < 0 || slotIndex >= _slots.Length || _slots[slotIndex].IsEmpty()) {
             return false;
         }
 
@@ -76,24 +59,14 @@ public class Inventory : MonoBehaviour {
     }
 
     public bool MoveItem(int fromSlot, int toSlot) {
-        if (fromSlot < 0 || fromSlot >= _slots.Length) {
-            return false;
-        }
-
-        if (toSlot < 0 || toSlot >= _slots.Length) {
-            return false;
-        }
-
-        if (fromSlot == toSlot) {
+        if (fromSlot < 0 || fromSlot >= _slots.Length || toSlot < 0 || toSlot >= _slots.Length || fromSlot == toSlot) {
             return false;
         }
 
         InventorySlot from = _slots[fromSlot];
         InventorySlot to = _slots[toSlot];
 
-        if (from.IsEmpty()) {
-            return false;
-        }
+        if (from.IsEmpty()) return false;
 
         if (to.IsEmpty()) {
             _slots[toSlot] = new InventorySlot(from.Item, from.Quantity);
@@ -139,46 +112,15 @@ public class Inventory : MonoBehaviour {
     }
 
     public bool DropItem(int slotIndex, Vector3 position, int quantity) {
-        if (slotIndex < 0 || slotIndex >= _slots.Length) {
+        if (slotIndex < 0 || slotIndex >= _slots.Length || _slots[slotIndex].IsEmpty() || quantity <= 0) {
             return false;
         }
 
-        if (_slots[slotIndex].IsEmpty()) {
-            return false;
-        }
-
-        if (quantity <= 0) {
-            return false;
-        }
-
-        int availableQuantity = _slots[slotIndex].Quantity;
-        if (availableQuantity <= 0) {
-            return false;
-        }
-
-        if (quantity > availableQuantity) {
-            quantity = availableQuantity;
-        }
-
+        quantity = Mathf.Min(quantity, _slots[slotIndex].Quantity);
         ItemData item = _slots[slotIndex].Item;
-        List<GameObject> createdItems = new List<GameObject>();
 
         for (int i = 0; i < quantity; i++) {
-            GameObject droppedItem = _itemFactory.CreateItem(item, position);
-            if (droppedItem == null) {
-                foreach (GameObject createdItem in createdItems) {
-                    if (createdItem != null) {
-                        CollectableItem collectable = createdItem.GetComponent<CollectableItem>();
-                        if (collectable != null) {
-                            collectable.Pickup();
-                        } else {
-                            Destroy(createdItem);
-                        }
-                    }
-                }
-                return false;
-            }
-            createdItems.Add(droppedItem);
+            _itemFactory?.CreateItem(item, position);
         }
 
         return RemoveItem(slotIndex, quantity);

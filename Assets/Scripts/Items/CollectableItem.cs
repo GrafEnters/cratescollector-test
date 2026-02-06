@@ -38,18 +38,12 @@ public class CollectableItem : MonoBehaviour {
         if (_itemPool != null) {
             _itemPool.Return(gameObject);
         } else {
-            if (_cachedMaterial != null) {
-                Destroy(_cachedMaterial);
-                _cachedMaterial = null;
-            }
+            Destroy(_cachedMaterial);
             Destroy(gameObject);
         }
     }
 
     private void OnDestroy() {
-        if (_cachedMaterial != null) {
-            Destroy(_cachedMaterial);
-            _cachedMaterial = null;
-        }
+        Destroy(_cachedMaterial);
     }
 }

@@ -20,30 +20,18 @@ public class ItemPickup : MonoBehaviour {
     private CollectableItem _nearbyItem;
 
     private void Awake() {
-        if (!DIContainer.Instance.TryGet<IItemDetector>(out _itemDetector)) {
-            Debug.LogError("IItemDetector not found in DI container");
-        }
-
-        if (!DIContainer.Instance.TryGet<IItemOutlineManager>(out _outlineManager)) {
-            Debug.LogError("IItemOutlineManager not found in DI container");
-        }
+        DIContainer.Instance.TryGet<IItemDetector>(out _itemDetector);
+        DIContainer.Instance.TryGet<IItemOutlineManager>(out _outlineManager);
+        DIContainer.Instance.TryGet<IConfigProvider>(out _configProvider);
 
         _inventory = GetComponent<Inventory>();
         _hintUI = GetComponent<ItemPickupHintUI>();
         _notification = GetComponent<InventoryFullNotification>();
-
-        if (!DIContainer.Instance.TryGet<IConfigProvider>(out _configProvider)) {
-            Debug.LogError("IConfigProvider not found in DI container");
-        }
-
         _interactAction = new InputAction("Interact", InputActionType.Button, "<Keyboard>/e");
     }
 
     private void Start() {
-        MainGameConfig config = _configProvider.GetConfig();
-        if (config != null) {
-            _cachedPickupDistance = config.PickupDistance;
-        }
+        _cachedPickupDistance = _configProvider?.GetConfig()?.PickupDistance ?? 2f;
     }
 
     private void OnEnable() {
@@ -62,52 +50,34 @@ public class ItemPickup : MonoBehaviour {
     }
 
     private void CheckForNearbyItems() {
-        if (_itemDetector == null || _outlineManager == null) {
-            return;
-        }
+        if (_itemDetector == null || _outlineManager == null) return;
 
         CollectableItem newNearbyItem = _itemDetector.FindNearestItem(transform.position, _cachedPickupDistance, _itemLayer);
 
         if (newNearbyItem != _nearbyItem) {
-            if (_nearbyItem != null) {
-                _outlineManager.HideOutline(_nearbyItem);
-            }
-
-            if (newNearbyItem != null) {
-                _outlineManager.ShowOutline(newNearbyItem);
-            }
-
+            _outlineManager.HideOutline(_nearbyItem);
+            _outlineManager.ShowOutline(newNearbyItem);
             _nearbyItem = newNearbyItem;
         }
     }
 
     private void UpdateHint() {
-        if (_hintUI != null) {
-            _hintUI.UpdateHint(_nearbyItem);
-        }
+        _hintUI?.UpdateHint(_nearbyItem);
     }
 
     private void OnInteract(InputAction.CallbackContext context) {
-        if (_nearbyItem == null || _inventory == null) {
-            return;
-        }
+        if (_nearbyItem == null || _inventory == null) return;
 
         ItemData itemData = _nearbyItem.GetItemData();
-        if (itemData == null) {
-            return;
-        }
+        if (itemData == null) return;
 
         if (_inventory.AddItem(itemData)) {
-            _outlineManager.HideOutline(_nearbyItem);
+            _outlineManager?.HideOutline(_nearbyItem);
             _nearbyItem.Pickup();
-
-            if (_itemSpawner != null) {
-                _itemSpawner.SpawnItemAtRandomPosition(itemData);
-            }
-
+            _itemSpawner?.SpawnItemAtRandomPosition(itemData);
             _nearbyItem = null;
         } else {
-            _notification.Show();
+            _notification?.Show();
         }
     }
 
