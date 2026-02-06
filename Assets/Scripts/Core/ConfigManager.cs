@@ -23,10 +23,6 @@ public class ConfigManager : MonoBehaviour
 
     private void Awake()
     {
-        config = Resources.Load<MainGameConfig>(CONFIG_PATH);
-        if (config == null)
-        {
-            Debug.LogError($"MainGameConfig not found at Resources/{CONFIG_PATH}");
-        }
+        _ = Config;
     }
 }

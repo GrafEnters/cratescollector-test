@@ -42,8 +42,8 @@ public class ThirdPersonCamera : MonoBehaviour
 
     private void HandleRotation()
     {
-        bool isInventoryBlocking = ConfigManager.Config != null && ConfigManager.Config.IsInventoryBlockingView;
-        if (isInventoryBlocking)
+        MainGameConfig config = ConfigManager.Config;
+        if (config != null && config.IsInventoryBlockingView)
         {
             InventoryUI inventoryUI = FindObjectOfType<InventoryUI>();
             if (inventoryUI != null && inventoryUI.IsOpen())
@@ -52,9 +52,9 @@ public class ThirdPersonCamera : MonoBehaviour
             }
         }
 
-        float rotationSpeed = ConfigManager.Config != null ? ConfigManager.Config.cameraRotationSpeed : 2f;
-        float minVerticalAngle = ConfigManager.Config != null ? ConfigManager.Config.cameraMinVerticalAngle : -30f;
-        float maxVerticalAngle = ConfigManager.Config != null ? ConfigManager.Config.cameraMaxVerticalAngle : 60f;
+        float rotationSpeed = config != null ? config.cameraRotationSpeed : 2f;
+        float minVerticalAngle = config != null ? config.cameraMinVerticalAngle : -30f;
+        float maxVerticalAngle = config != null ? config.cameraMaxVerticalAngle : 60f;
         
         float mouseX = Input.GetAxis("Mouse X") * rotationSpeed;
         float mouseY = Input.GetAxis("Mouse Y") * rotationSpeed;
@@ -66,8 +66,9 @@ public class ThirdPersonCamera : MonoBehaviour
 
     private void UpdateCameraPosition()
     {
-        float distance = ConfigManager.Config != null ? ConfigManager.Config.cameraDistance : 5f;
-        float height = ConfigManager.Config != null ? ConfigManager.Config.cameraHeight : 2f;
+        MainGameConfig config = ConfigManager.Config;
+        float distance = config != null ? config.cameraDistance : 5f;
+        float height = config != null ? config.cameraHeight : 2f;
         
         Quaternion rotation = Quaternion.Euler(currentRotationY, currentRotationX, 0);
         Vector3 direction = rotation * Vector3.back;

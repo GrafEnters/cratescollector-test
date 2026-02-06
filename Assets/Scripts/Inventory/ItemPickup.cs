@@ -157,13 +157,10 @@ public class ItemPickup : MonoBehaviour
 
     private void CheckForNearbyItems()
     {
-        float pickupDistance = ConfigManager.Config != null ? ConfigManager.Config.pickupDistance : 2f;
+        MainGameConfig config = ConfigManager.Config;
+        float pickupDistance = config != null ? config.pickupDistance : 2f;
         
-        int layerMask = itemLayer.value;
-        if (layerMask == 0)
-        {
-            layerMask = -1;
-        }
+        int layerMask = itemLayer.value != 0 ? itemLayer.value : -1;
 
         Collider[] colliders = Physics.OverlapSphere(transform.position, pickupDistance, layerMask);
         CollectableItem closestItem = null;
@@ -214,8 +211,8 @@ public class ItemPickup : MonoBehaviour
     {
         if (hintElement == null || !uiReady || uiDocument == null) return;
 
-        bool isInventoryBlocking = ConfigManager.Config != null && ConfigManager.Config.IsInventoryBlockingView;
-        if (isInventoryBlocking)
+        MainGameConfig config = ConfigManager.Config;
+        if (config != null && config.IsInventoryBlockingView)
         {
             InventoryUI inventoryUI = FindObjectOfType<InventoryUI>();
             if (inventoryUI != null && inventoryUI.IsOpen())
@@ -227,7 +224,7 @@ public class ItemPickup : MonoBehaviour
 
         if (nearbyItem != null && Camera.main != null)
         {
-            float hintHeight = ConfigManager.Config != null ? ConfigManager.Config.pickupHintHeight : 0.75f;
+            float hintHeight = config != null ? config.pickupHintHeight : 0.75f;
             Vector3 worldPosition = nearbyItem.transform.position + Vector3.up * hintHeight;
             Vector3 screenPosition = Camera.main.WorldToScreenPoint(worldPosition);
             
@@ -273,45 +270,41 @@ public class ItemPickup : MonoBehaviour
 
     private void OnInteract(InputAction.CallbackContext context)
     {
-        if (nearbyItem != null && inventory != null)
+        if (nearbyItem == null || inventory == null) return;
+
+        ItemData itemData = nearbyItem.GetItemData();
+        if (itemData == null) return;
+
+        if (inventory.AddItem(itemData, 1))
         {
-            ItemData itemData = nearbyItem.GetItemData();
-            if (itemData != null)
+            ItemOutline outline = nearbyItem.GetComponent<ItemOutline>();
+            if (outline != null)
             {
-                if (inventory.AddItem(itemData, 1))
-                {
-                    if (nearbyItem != null)
-                    {
-                        ItemOutline outline = nearbyItem.GetComponent<ItemOutline>();
-                        if (outline != null)
-                        {
-                            outline.HideOutline();
-                        }
-                    }
-                    
-                    nearbyItem.Pickup();
-                    
-                    if (itemSpawner != null)
-                    {
-                        itemSpawner.SpawnItemAtRandomPosition(itemData);
-                    }
-                    
-                    nearbyItem = null;
-                }
-                else
-                {
-                    if (notification != null)
-                    {
-                        notification.Show();
-                    }
-                }
+                outline.HideOutline();
+            }
+            
+            nearbyItem.Pickup();
+            
+            if (itemSpawner != null)
+            {
+                itemSpawner.SpawnItemAtRandomPosition(itemData);
+            }
+            
+            nearbyItem = null;
+        }
+        else
+        {
+            if (notification != null)
+            {
+                notification.Show();
             }
         }
     }
 
     private void OnDrawGizmosSelected()
     {
-        float pickupDistance = ConfigManager.Config != null ? ConfigManager.Config.pickupDistance : 2f;
+        MainGameConfig config = ConfigManager.Config;
+        float pickupDistance = config != null ? config.pickupDistance : 2f;
         Gizmos.color = Color.yellow;
         Gizmos.DrawWireSphere(transform.position, pickupDistance);
     }

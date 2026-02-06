@@ -9,7 +9,8 @@ public class Inventory : MonoBehaviour
 
     private void Awake()
     {
-        int slotCount = ConfigManager.Config != null ? ConfigManager.Config.inventorySlotCount : 12;
+        MainGameConfig config = ConfigManager.Config;
+        int slotCount = config != null ? config.inventorySlotCount : 12;
         slots = new InventorySlot[slotCount];
         for (int i = 0; i < slotCount; i++)
         {
@@ -118,11 +119,11 @@ public class Inventory : MonoBehaviour
         if (slots[slotIndex].IsEmpty()) return false;
 
         ItemData item = slots[slotIndex].item;
-        int quantityToDrop = 1;
 
         GameObject droppedItem = GameObject.CreatePrimitive(PrimitiveType.Cube);
         droppedItem.transform.position = position;
-        float itemScale = ConfigManager.Config != null ? ConfigManager.Config.itemScale : 0.5f;
+        MainGameConfig config = ConfigManager.Config;
+        float itemScale = config != null ? config.itemScale : 0.5f;
         droppedItem.transform.localScale = Vector3.one * itemScale;
         droppedItem.name = item.name;
 
@@ -137,12 +138,9 @@ public class Inventory : MonoBehaviour
         droppedItem.AddComponent<ItemOutline>();
 
         Collider collider = droppedItem.GetComponent<Collider>();
-        if (collider != null)
-        {
-            collider.isTrigger = true;
-        }
+        collider.isTrigger = true;
 
-        RemoveItem(slotIndex, quantityToDrop);
+        RemoveItem(slotIndex, 1);
         return true;
     }
 }

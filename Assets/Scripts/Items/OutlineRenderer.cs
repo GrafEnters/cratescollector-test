@@ -82,10 +82,13 @@ public class OutlineRenderer : MonoBehaviour
     
     private void UpdateOutlineProperties()
     {
-        if (edgeDetectionMaterial != null && ConfigManager.Config != null)
+        if (edgeDetectionMaterial == null) return;
+
+        MainGameConfig config = ConfigManager.Config;
+        if (config != null)
         {
-            edgeDetectionMaterial.SetColor("_OutlineColor", ConfigManager.Config.outlineColor);
-            edgeDetectionMaterial.SetFloat("_OutlineWidth", ConfigManager.Config.outlineWidth);
+            edgeDetectionMaterial.SetColor("_OutlineColor", config.outlineColor);
+            edgeDetectionMaterial.SetFloat("_OutlineWidth", config.outlineWidth);
         }
     }
     

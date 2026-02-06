@@ -324,17 +324,12 @@ public class InventoryUI : MonoBehaviour
         if (playerTransform == null)
         {
             GameObject player = GameObject.FindGameObjectWithTag("Player");
-            if (player != null)
-            {
-                playerTransform = player.transform;
-            }
+            if (player == null) return;
+            playerTransform = player.transform;
         }
 
-        if (playerTransform == null) return;
-
-        Camera mainCamera = Camera.main;
         Vector3 forwardDirection = Vector3.forward;
-        
+        Camera mainCamera = Camera.main;
         if (mainCamera != null)
         {
             forwardDirection = mainCamera.transform.forward;

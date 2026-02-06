@@ -28,7 +28,6 @@ public class InventorySlotUI
         slotElement.RegisterCallback<PointerDownEvent>(OnPointerDown);
         slotElement.RegisterCallback<PointerMoveEvent>(OnPointerMove);
         slotElement.RegisterCallback<PointerUpEvent>(OnPointerUp);
-        slotElement.RegisterCallback<PointerLeaveEvent>(OnPointerLeave);
     }
 
     private bool isDragging = false;
@@ -196,11 +195,6 @@ public class InventorySlotUI
         return null;
     }
 
-    private void OnPointerLeave(PointerLeaveEvent evt)
-    {
-        
-    }
-
     private void ClearDragState()
     {
         isDragging = false;
@@ -251,7 +245,7 @@ public class InventorySlotUI
             iconElement.style.display = DisplayStyle.Flex;
             iconElement.style.backgroundColor = slot.item.color;
 
-            if (slot.item != null && slot.item.stackable && slot.quantity > 1)
+            if (slot.item.stackable && slot.quantity > 1)
             {
                 quantityLabel.text = slot.quantity.ToString();
                 quantityLabel.style.display = DisplayStyle.Flex;

@@ -43,7 +43,8 @@ public class ItemSpawner : MonoBehaviour
 
         List<Vector3> spawnedPositions = new List<Vector3>();
         int spawnedCount = 0;
-        int itemCount = ConfigManager.Config != null ? ConfigManager.Config.itemSpawnerItemCount : 6;
+        MainGameConfig config = ConfigManager.Config;
+        int itemCount = config != null ? config.itemSpawnerItemCount : 6;
 
         while (spawnedCount < itemCount && spawnedCount < itemsData.Count)
         {
@@ -64,11 +65,12 @@ public class ItemSpawner : MonoBehaviour
 
     private Vector3 GetRandomPosition(List<Vector3> existingPositions, Vector3? playerPosition = null)
     {
-        float spawnRadius = ConfigManager.Config != null ? ConfigManager.Config.itemSpawnerRadius : 10f;
-        float minDistance = ConfigManager.Config != null ? ConfigManager.Config.itemSpawnerMinDistance : 2f;
-        float minDistanceFromPlayer = ConfigManager.Config != null ? ConfigManager.Config.itemSpawnerMinDistanceFromPlayer : 3f;
-        float spawnHeight = ConfigManager.Config != null ? ConfigManager.Config.itemSpawnerHeight : 0.5f;
-        int attempts = ConfigManager.Config != null ? ConfigManager.Config.itemSpawnerMaxAttempts : 50;
+        MainGameConfig config = ConfigManager.Config;
+        float spawnRadius = config != null ? config.itemSpawnerRadius : 10f;
+        float minDistance = config != null ? config.itemSpawnerMinDistance : 2f;
+        float minDistanceFromPlayer = config != null ? config.itemSpawnerMinDistanceFromPlayer : 3f;
+        float spawnHeight = config != null ? config.itemSpawnerHeight : 0.5f;
+        int attempts = config != null ? config.itemSpawnerMaxAttempts : 50;
         
         for (int i = 0; i < attempts; i++)
         {
@@ -108,7 +110,8 @@ public class ItemSpawner : MonoBehaviour
     {
         GameObject itemObject = GameObject.CreatePrimitive(PrimitiveType.Cube);
         itemObject.transform.position = position;
-        float itemScale = ConfigManager.Config != null ? ConfigManager.Config.itemScale : 0.5f;
+        MainGameConfig config = ConfigManager.Config;
+        float itemScale = config != null ? config.itemScale : 0.5f;
         itemObject.transform.localScale = Vector3.one * itemScale;
         itemObject.name = itemData.name;
 
@@ -118,10 +121,7 @@ public class ItemSpawner : MonoBehaviour
         renderer.material = mat;
 
         Collider collider = itemObject.GetComponent<Collider>();
-        if (collider != null)
-        {
-            collider.isTrigger = true;
-        }
+        collider.isTrigger = true;
 
         CollectableItem collectable = itemObject.AddComponent<CollectableItem>();
         collectable.SetItemData(itemData);

@@ -110,31 +110,27 @@ public class PlayerController : MonoBehaviour
         }
         
         float playerRadius = characterController.radius;
-        bool positionChanged = false;
+        Vector3 originalPos = pos;
         
         if (pos.x - playerRadius < platformBounds.min.x)
         {
             pos.x = platformBounds.min.x + playerRadius;
-            positionChanged = true;
         }
         else if (pos.x + playerRadius > platformBounds.max.x)
         {
             pos.x = platformBounds.max.x - playerRadius;
-            positionChanged = true;
         }
         
         if (pos.z - playerRadius < platformBounds.min.z)
         {
             pos.z = platformBounds.min.z + playerRadius;
-            positionChanged = true;
         }
         else if (pos.z + playerRadius > platformBounds.max.z)
         {
             pos.z = platformBounds.max.z - playerRadius;
-            positionChanged = true;
         }
         
-        if (positionChanged)
+        if (pos != originalPos)
         {
             transform.position = pos;
         }
@@ -142,8 +138,8 @@ public class PlayerController : MonoBehaviour
 
     private void HandleMovement()
     {
-        bool isInventoryBlocking = ConfigManager.Config != null && ConfigManager.Config.IsInventoryBlockingView;
-        if (isInventoryBlocking)
+        MainGameConfig config = ConfigManager.Config;
+        if (config != null && config.IsInventoryBlockingView)
         {
             InventoryUI inventoryUI = FindObjectOfType<InventoryUI>();
             if (inventoryUI != null && inventoryUI.IsOpen())
@@ -159,11 +155,10 @@ public class PlayerController : MonoBehaviour
             {
                 cameraTransform = mainCamera.transform;
             }
-        }
-
-        if (cameraTransform == null)
-        {
-            return;
+            else
+            {
+                return;
+            }
         }
 
         Vector3 moveDirection = Vector3.zero;
@@ -184,7 +179,7 @@ public class PlayerController : MonoBehaviour
 
         if (moveDirection.magnitude > 0.1f)
         {
-            float moveSpeed = ConfigManager.Config != null ? ConfigManager.Config.playerMoveSpeed : 5f;
+            float moveSpeed = config != null ? config.playerMoveSpeed : 5f;
             Vector3 move = moveDirection * moveSpeed;
             velocity.x = move.x;
             velocity.z = move.z;
@@ -237,7 +232,8 @@ public class PlayerController : MonoBehaviour
             
             if (moveDirection.magnitude > 0.1f)
             {
-                float rotationSpeed = ConfigManager.Config != null ? ConfigManager.Config.playerRotationSpeed : 10f;
+                MainGameConfig config = ConfigManager.Config;
+                float rotationSpeed = config != null ? config.playerRotationSpeed : 10f;
                 Quaternion targetRotation = Quaternion.LookRotation(moveDirection);
                 transform.rotation = Quaternion.Slerp(transform.rotation, targetRotation, rotationSpeed * Time.deltaTime);
             }

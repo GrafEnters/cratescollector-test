@@ -40,9 +40,6 @@ public class ItemOutline : MonoBehaviour
     
     private void OnDestroy()
     {
-        if (isOutlined)
-        {
-            HideOutline();
-        }
+        HideOutline();
     }
 }
