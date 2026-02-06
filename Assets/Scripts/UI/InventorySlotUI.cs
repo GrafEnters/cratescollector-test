@@ -221,8 +221,8 @@ public class InventorySlotUI {
             _iconElement.style.display = DisplayStyle.Flex;
             _iconElement.style.backgroundColor = slot.Item.Color;
 
-            if (slot.Item.Stackable && slot.Quantity > 1) {
-                _quantityLabel.text = slot.Quantity.ToString();
+            if (slot.Item.Stackable) {
+                _quantityLabel.text = $"{slot.Quantity}/{slot.Item.MaxStack}";
                 _quantityLabel.style.display = DisplayStyle.Flex;
             } else {
                 _quantityLabel.style.display = DisplayStyle.None;
