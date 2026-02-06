@@ -32,7 +32,9 @@ public class InventorySlotUI {
 
     private bool _isDragging;
     private Vector2 _dragStartPosition;
+    private Vector2 _dragOffset;
     private int _capturedPointerId = -1;
+    private VisualElement _dragGhost;
 
     private void OnPointerDown(PointerDownEvent evt) {
         if (_inventoryUI == null || _slotElement == null) {
@@ -57,6 +59,13 @@ public class InventorySlotUI {
         _isDragging = true;
         _dragStartPosition = evt.position;
         _capturedPointerId = evt.pointerId;
+        
+        Rect slotWorldBound = _slotElement.worldBound;
+        Vector2 slotCenterWorld = new Vector2(slotWorldBound.x + slotWorldBound.width * 0.5f, slotWorldBound.y + slotWorldBound.height * 0.5f);
+        Vector2 panelPos = evt.position;
+        _dragOffset = panelPos - slotCenterWorld;
+        
+        CreateDragGhost(evt.position);
         _slotElement.AddToClassList("dragging");
         _slotElement.CapturePointer(evt.pointerId);
 
@@ -88,7 +97,9 @@ public class InventorySlotUI {
             return;
         }
 
-        VisualElement elementUnderPointer = panel.Pick(position);
+        UpdateDragGhostPosition(position);
+
+        VisualElement elementUnderPointer = PickIgnoringGhost(position, panel);
         ClearDragOverStates();
 
         if (elementUnderPointer != null) {
@@ -117,7 +128,7 @@ public class InventorySlotUI {
             return;
         }
 
-        VisualElement targetElement = panel.Pick(position);
+        VisualElement targetElement = PickIgnoringGhost(position, panel);
         VisualElement targetSlot = FindSlotElement(targetElement);
 
         int targetSlotIndex = -1;
@@ -137,6 +148,29 @@ public class InventorySlotUI {
         }
 
         ClearDragState();
+    }
+
+    private VisualElement PickIgnoringGhost(Vector2 position, IPanel panel) {
+        if (panel == null) {
+            return null;
+        }
+
+        if (_dragGhost == null) {
+            return panel.Pick(position);
+        }
+
+        StyleLength savedLeft = _dragGhost.style.left;
+        StyleLength savedTop = _dragGhost.style.top;
+        
+        _dragGhost.style.left = -10000f;
+        _dragGhost.style.top = -10000f;
+
+        VisualElement picked = panel.Pick(position);
+
+        _dragGhost.style.left = savedLeft;
+        _dragGhost.style.top = savedTop;
+
+        return picked;
     }
 
     private VisualElement FindSlotElement(VisualElement element) {
@@ -186,6 +220,7 @@ public class InventorySlotUI {
 
     private void ClearDragState() {
         _isDragging = false;
+        DestroyDragGhost();
 
         if (_slotElement != null) {
             _slotElement.RemoveFromClassList("dragging");
@@ -207,6 +242,91 @@ public class InventorySlotUI {
 
         _capturedPointerId = -1;
         ClearDragOverStates();
+    }
+
+    private void CreateDragGhost(Vector2 position) {
+        if (_slotElement == null || _slotElement.panel == null) {
+            return;
+        }
+
+        VisualElement root = _slotElement.panel.visualTree;
+        if (root == null) {
+            return;
+        }
+
+        Inventory inventory = _inventoryUI.GetInventory();
+        if (inventory == null) {
+            return;
+        }
+
+        InventorySlot slot = inventory.GetSlot(_slotIndex);
+        if (slot == null || slot.IsEmpty()) {
+            return;
+        }
+
+        float iconWidth = _iconElement.resolvedStyle.width;
+        float iconHeight = _iconElement.resolvedStyle.height;
+        
+        if (iconWidth <= 0) {
+            Rect iconRect = _iconElement.worldBound;
+            iconWidth = iconRect.width > 0 ? iconRect.width : 50f;
+        }
+        if (iconHeight <= 0) {
+            Rect iconRect = _iconElement.worldBound;
+            iconHeight = iconRect.height > 0 ? iconRect.height : 50f;
+        }
+
+        _dragGhost = new VisualElement {
+            name = "DragGhost"
+        };
+        _dragGhost.AddToClassList("slot-icon");
+        _dragGhost.style.position = Position.Absolute;
+        _dragGhost.style.backgroundColor = slot.Item.Color;
+        _dragGhost.style.width = iconWidth * 0.75f;
+        _dragGhost.style.height = iconHeight * 0.75f;
+        _dragGhost.style.opacity = 0.6f;
+        _dragGhost.pickingMode = PickingMode.Ignore;
+
+        if (slot.Item.Stackable) {
+            Label quantityLabel = new Label {
+                text = $"{slot.Quantity}/{slot.Item.MaxStack}"
+            };
+            quantityLabel.AddToClassList("slot-quantity");
+            _dragGhost.Add(quantityLabel);
+        }
+
+        StyleKeyword positionKeyword = root.style.position.keyword;
+        if (positionKeyword == StyleKeyword.Auto || positionKeyword == StyleKeyword.None) {
+            root.style.position = Position.Relative;
+        }
+        
+        root.Add(_dragGhost);
+        UpdateDragGhostPosition(position);
+        
+        _iconElement.style.opacity = 0.3f;
+    }
+
+    private void UpdateDragGhostPosition(Vector2 position) {
+        if (_dragGhost == null) {
+            return;
+        }
+
+        Vector2 ghostPosition = position - _dragOffset;
+        _dragGhost.style.left = ghostPosition.x;
+        _dragGhost.style.top = ghostPosition.y;
+    }
+
+    private void DestroyDragGhost() {
+        if (_dragGhost != null) {
+            if (_dragGhost.parent != null) {
+                _dragGhost.parent.Remove(_dragGhost);
+            }
+            _dragGhost = null;
+        }
+
+        if (_iconElement != null) {
+            _iconElement.style.opacity = 1f;
+        }
     }
 
     public void UpdateSlot(InventorySlot slot) {
