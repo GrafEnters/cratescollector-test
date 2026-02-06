@@ -11,6 +11,7 @@ public class PlayerController : MonoBehaviour
     private InputAction moveAction;
     private Vector2 moveInput;
     private Vector3 velocity;
+    private Bounds platformBounds;
 
     private void Awake()
     {
@@ -40,6 +41,32 @@ public class PlayerController : MonoBehaviour
         Vector3 pos = transform.position;
         pos.y = 0f;
         transform.position = pos;
+        
+        FindPlatformBounds();
+    }
+    
+    private void FindPlatformBounds()
+    {
+        GameObject ground = GameObject.Find("Ground");
+        if (ground != null)
+        {
+            BoxCollider groundCollider = ground.GetComponent<BoxCollider>();
+            if (groundCollider != null)
+            {
+                platformBounds = groundCollider.bounds;
+            }
+            else
+            {
+                Transform groundTransform = ground.transform;
+                Vector3 groundScale = groundTransform.localScale;
+                Vector3 groundPosition = groundTransform.position;
+                platformBounds = new Bounds(groundPosition, groundScale);
+            }
+        }
+        else
+        {
+            platformBounds = new Bounds(Vector3.zero, new Vector3(20f, 1f, 20f));
+        }
     }
 
     private void OnEnable()
@@ -74,10 +101,41 @@ public class PlayerController : MonoBehaviour
 
     private void LateUpdate()
     {
-        if (characterController.isGrounded && Mathf.Abs(transform.position.y) > 0.05f)
+        Vector3 pos = transform.position;
+        
+        if (characterController.isGrounded && Mathf.Abs(pos.y) > 0.05f)
         {
-            Vector3 pos = transform.position;
             pos.y = 0f;
+            transform.position = pos;
+        }
+        
+        float playerRadius = characterController.radius;
+        bool positionChanged = false;
+        
+        if (pos.x - playerRadius < platformBounds.min.x)
+        {
+            pos.x = platformBounds.min.x + playerRadius;
+            positionChanged = true;
+        }
+        else if (pos.x + playerRadius > platformBounds.max.x)
+        {
+            pos.x = platformBounds.max.x - playerRadius;
+            positionChanged = true;
+        }
+        
+        if (pos.z - playerRadius < platformBounds.min.z)
+        {
+            pos.z = platformBounds.min.z + playerRadius;
+            positionChanged = true;
+        }
+        else if (pos.z + playerRadius > platformBounds.max.z)
+        {
+            pos.z = platformBounds.max.z - playerRadius;
+            positionChanged = true;
+        }
+        
+        if (positionChanged)
+        {
             transform.position = pos;
         }
     }
@@ -134,6 +192,28 @@ public class PlayerController : MonoBehaviour
         else
         {
             velocity.x = 0f;
+            velocity.z = 0f;
+        }
+
+        Vector3 currentPosition = transform.position;
+        float playerRadius = characterController.radius;
+        Vector3 nextPosition = currentPosition + velocity * Time.deltaTime;
+        
+        if (nextPosition.x - playerRadius < platformBounds.min.x)
+        {
+            velocity.x = 0f;
+        }
+        else if (nextPosition.x + playerRadius > platformBounds.max.x)
+        {
+            velocity.x = 0f;
+        }
+        
+        if (nextPosition.z - playerRadius < platformBounds.min.z)
+        {
+            velocity.z = 0f;
+        }
+        else if (nextPosition.z + playerRadius > platformBounds.max.z)
+        {
             velocity.z = 0f;
         }
 
