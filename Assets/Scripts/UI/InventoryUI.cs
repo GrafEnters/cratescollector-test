@@ -14,6 +14,8 @@ public class InventoryUI : MonoBehaviour
     private InventorySlotUI[] slotUIs;
     private Inventory inventory;
     private bool isOpen = true;
+    private Vector2 lastCursorPosition;
+    private bool hasStoredCursorPosition = false;
 
     private void Awake()
     {
@@ -164,6 +166,16 @@ public class InventoryUI : MonoBehaviour
         {
             inventoryWindow.AddToClassList("visible");
         }
+
+        if (isOpen)
+        {
+            UnityEngine.Cursor.lockState = CursorLockMode.None;
+            UnityEngine.Cursor.visible = true;
+        }
+        else
+        {
+            HideCursor();
+        }
     }
 
     private void ToggleInventory()
@@ -174,12 +186,66 @@ public class InventoryUI : MonoBehaviour
             if (isOpen)
             {
                 inventoryWindow.AddToClassList("visible");
+                RestoreCursorPosition();
             }
             else
             {
+                SaveCursorPosition();
                 inventoryWindow.RemoveFromClassList("visible");
+                HideCursor();
             }
         }
+    }
+
+    private void SaveCursorPosition()
+    {
+        if (Mouse.current != null && Mouse.current.enabled)
+        {
+            lastCursorPosition = Mouse.current.position.ReadValue();
+            hasStoredCursorPosition = true;
+        }
+        else
+        {
+            lastCursorPosition = Input.mousePosition;
+            hasStoredCursorPosition = true;
+        }
+    }
+
+    private void RestoreCursorPosition()
+    {
+        if (hasStoredCursorPosition)
+        {
+            StartCoroutine(RestoreCursorPositionCoroutine());
+        }
+    }
+
+    private IEnumerator RestoreCursorPositionCoroutine()
+    {
+        yield return null;
+        
+        if (hasStoredCursorPosition)
+        {
+            UnityEngine.Cursor.lockState = CursorLockMode.None;
+            UnityEngine.Cursor.visible = true;
+            
+            yield return null;
+            
+            if (Mouse.current != null && Mouse.current.enabled)
+            {
+                Mouse.current.WarpCursorPosition(lastCursorPosition);
+            }
+        }
+        else
+        {
+            UnityEngine.Cursor.lockState = CursorLockMode.None;
+            UnityEngine.Cursor.visible = true;
+        }
+    }
+
+    private void HideCursor()
+    {
+        UnityEngine.Cursor.visible = false;
+        UnityEngine.Cursor.lockState = CursorLockMode.Locked;
     }
 
     private void OnSlotChanged(int slotIndex)
