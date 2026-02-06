@@ -122,6 +122,10 @@ public class Inventory : MonoBehaviour {
     }
 
     public bool DropItem(int slotIndex, Vector3 position) {
+        return DropItem(slotIndex, position, 1);
+    }
+
+    public bool DropItem(int slotIndex, Vector3 position, int quantity) {
         if (slotIndex < 0 || slotIndex >= _slots.Length) {
             return false;
         }
@@ -130,13 +134,27 @@ public class Inventory : MonoBehaviour {
             return false;
         }
 
-        ItemData item = _slots[slotIndex].Item;
-        GameObject droppedItem = _itemFactory.CreateItem(item, position);
-        if (droppedItem == null) {
+        if (quantity <= 0) {
             return false;
         }
 
-        RemoveItem(slotIndex);
-        return true;
+        int availableQuantity = _slots[slotIndex].Quantity;
+        if (availableQuantity <= 0) {
+            return false;
+        }
+
+        if (quantity > availableQuantity) {
+            quantity = availableQuantity;
+        }
+
+        ItemData item = _slots[slotIndex].Item;
+        for (int i = 0; i < quantity; i++) {
+            GameObject droppedItem = _itemFactory.CreateItem(item, position);
+            if (droppedItem == null) {
+                return false;
+            }
+        }
+
+        return RemoveItem(slotIndex, quantity);
     }
 }

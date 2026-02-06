@@ -130,7 +130,7 @@ public class InventorySlotUI {
             if (targetSlotIndex >= 0 && targetSlotIndex != _slotIndex) {
                 inventory.MoveItem(_slotIndex, targetSlotIndex);
             } else if (targetSlotIndex < 0) {
-                _inventoryUI.DropItem(_slotIndex);
+                _inventoryUI.DropItemStack(_slotIndex);
             }
         }
 

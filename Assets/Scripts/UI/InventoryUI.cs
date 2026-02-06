@@ -297,6 +297,40 @@ public class InventoryUI : MonoBehaviour {
         _inventory.DropItem(slotIndex, dropPosition);
     }
 
+    public void DropItemStack(int slotIndex) {
+        if (_inventory == null) {
+            return;
+        }
+
+        InventorySlot slot = _inventory.GetSlot(slotIndex);
+        if (slot.IsEmpty()) {
+            return;
+        }
+
+        Transform playerTransform = _inventory.transform;
+        if (playerTransform == null) {
+            GameObject player = GameObject.FindGameObjectWithTag("Player");
+            if (player == null) {
+                return;
+            }
+
+            playerTransform = player.transform;
+        }
+
+        Vector3 forwardDirection = Vector3.forward;
+        Camera mainCamera = Camera.main;
+        if (mainCamera != null) {
+            forwardDirection = mainCamera.transform.forward;
+            forwardDirection.y = 0f;
+            forwardDirection.Normalize();
+        } else {
+            forwardDirection = playerTransform.forward;
+        }
+
+        Vector3 dropPosition = playerTransform.position + forwardDirection * 2f + Vector3.up * 0.5f;
+        _inventory.DropItem(slotIndex, dropPosition, slot.Quantity);
+    }
+
     private void OnDestroy() {
         if (_inventory != null) {
             _inventory.OnSlotChanged -= OnSlotChanged;
