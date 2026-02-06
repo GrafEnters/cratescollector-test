@@ -7,10 +7,14 @@ public class OutlineRenderer : MonoBehaviour {
     private Material _outlineMaterial;
     private Material _edgeDetectionMaterial;
     private CommandBuffer _commandBuffer;
-    private ConfigProvider _configProvider;
+    private IConfigProvider _configProvider;
+    private Color _cachedOutlineColor;
+    private float _cachedOutlineWidth;
 
     private void Awake() {
-        _configProvider = DIContainer.Instance.Get<IConfigProvider>() as ConfigProvider;
+        if (!DIContainer.Instance.TryGet<IConfigProvider>(out _configProvider)) {
+            Debug.LogError("IConfigProvider not found in DI container");
+        }
     }
 
     private void Start() {
@@ -27,10 +31,23 @@ public class OutlineRenderer : MonoBehaviour {
         Shader edgeShader = Shader.Find("Custom/OutlinePostProcess");
         if (edgeShader != null) {
             _edgeDetectionMaterial = new Material(edgeShader);
+            CacheOutlineProperties();
             UpdateOutlineProperties();
         }
 
         SetupCommandBuffer();
+    }
+
+    private void CacheOutlineProperties() {
+        if (_configProvider == null) {
+            return;
+        }
+
+        MainGameConfig config = _configProvider.GetConfig();
+        if (config != null) {
+            _cachedOutlineColor = config.OutlineColor;
+            _cachedOutlineWidth = config.OutlineWidth;
+        }
     }
 
     private void SetupCommandBuffer() {
@@ -65,9 +82,9 @@ public class OutlineRenderer : MonoBehaviour {
         _commandBuffer.SetRenderTarget(_outlineTexture);
         _commandBuffer.ClearRenderTarget(true, true, Color.clear);
 
-        ItemOutline[] outlinedItems = FindObjectsByType<ItemOutline>(FindObjectsSortMode.None);
+        var outlinedItems = ItemOutline.GetAllOutlines();
         foreach (ItemOutline item in outlinedItems) {
-            if (item.IsOutlined()) {
+            if (item != null && item.IsOutlined()) {
                 MeshFilter filter = item.GetComponent<MeshFilter>();
                 if (filter != null) {
                     _commandBuffer.DrawMesh(filter.sharedMesh, item.transform.localToWorldMatrix, _outlineMaterial, 0, 0);
@@ -81,9 +98,8 @@ public class OutlineRenderer : MonoBehaviour {
             return;
         }
 
-        MainGameConfig config = _configProvider.GetConfig();
-        _edgeDetectionMaterial.SetColor("_OutlineColor", config.OutlineColor);
-        _edgeDetectionMaterial.SetFloat("_OutlineWidth", config.OutlineWidth);
+        _edgeDetectionMaterial.SetColor("_OutlineColor", _cachedOutlineColor);
+        _edgeDetectionMaterial.SetFloat("_OutlineWidth", _cachedOutlineWidth);
     }
 
     private void OnPreRender() {
@@ -100,7 +116,6 @@ public class OutlineRenderer : MonoBehaviour {
             return;
         }
 
-        UpdateOutlineProperties();
         _edgeDetectionMaterial.SetTexture("_OutlineTex", _outlineTexture);
         Graphics.Blit(source, destination, _edgeDetectionMaterial);
     }

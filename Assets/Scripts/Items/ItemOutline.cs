@@ -2,9 +2,20 @@ using UnityEngine;
 
 public class ItemOutline : MonoBehaviour {
     private bool _isOutlined;
+    private static System.Collections.Generic.List<ItemOutline> _allOutlines = new();
+
+    public static System.Collections.Generic.IReadOnlyList<ItemOutline> GetAllOutlines() {
+        return _allOutlines;
+    }
 
     public bool IsOutlined() {
         return _isOutlined;
+    }
+
+    private void Awake() {
+        if (!_allOutlines.Contains(this)) {
+            _allOutlines.Add(this);
+        }
     }
 
     public void ShowOutline() {
@@ -26,10 +37,6 @@ public class ItemOutline : MonoBehaviour {
 
     private void EnsureOutlineRenderer() {
         Camera mainCamera = Camera.main;
-        if (mainCamera == null) {
-            mainCamera = FindAnyObjectByType<Camera>();
-        }
-
         if (mainCamera != null && mainCamera.GetComponent<OutlineRenderer>() == null) {
             mainCamera.gameObject.AddComponent<OutlineRenderer>();
         }
@@ -37,5 +44,6 @@ public class ItemOutline : MonoBehaviour {
 
     private void OnDestroy() {
         HideOutline();
+        _allOutlines.Remove(this);
     }
 }

@@ -1,20 +1,22 @@
 using UnityEngine;
 
 public class ItemVisualFactory : MonoBehaviour, IItemFactory {
-    private ConfigProvider _configProvider;
+    private IConfigProvider _configProvider;
     private ItemPool _itemPool;
 
     private void Awake() {
-        _configProvider = DIContainer.Instance.Get<IConfigProvider>() as ConfigProvider;
+        if (!DIContainer.Instance.TryGet<IConfigProvider>(out _configProvider)) {
+            Debug.LogError("IConfigProvider not found in DI container");
+        }
     }
 
     private void Start() {
-        _itemPool = DIContainer.Instance.Get<ItemPool>();
+        DIContainer.Instance.TryGet<ItemPool>(out _itemPool);
     }
 
     public GameObject CreateItem(ItemData itemData, Vector3 position) {
         if (_itemPool == null) {
-            _itemPool = DIContainer.Instance.Get<ItemPool>();
+            DIContainer.Instance.TryGet<ItemPool>(out _itemPool);
         }
 
         GameObject itemObject = _itemPool != null ? _itemPool.Get() : CreateItemFallback(itemData, position);
@@ -31,8 +33,8 @@ public class ItemVisualFactory : MonoBehaviour, IItemFactory {
         GameObject itemObject = GameObject.CreatePrimitive(PrimitiveType.Cube);
         itemObject.transform.position = position;
 
-        MainGameConfig config = _configProvider.GetConfig();
-        float itemScale = config.ItemScale;
+        MainGameConfig config = _configProvider?.GetConfig();
+        float itemScale = config != null ? config.ItemScale : 0.5f;
         itemObject.transform.localScale = Vector3.one * itemScale;
         itemObject.name = itemData.Name;
 

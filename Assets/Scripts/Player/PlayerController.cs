@@ -6,13 +6,20 @@ public class PlayerController : MonoBehaviour {
     [SerializeField]
     private Transform _cameraTransform;
 
+    [SerializeField]
+    private Transform _groundTransform;
+
     private CharacterController _characterController;
     private InputAction _moveAction;
     private Vector2 _moveInput;
     private Vector3 _velocity;
     private Bounds _platformBounds;
-    private InventoryStateProvider _inventoryStateProvider;
-    private ConfigProvider _configProvider;
+    private IInventoryStateProvider _inventoryStateProvider;
+    private IConfigProvider _configProvider;
+    private MainGameConfig _cachedConfig;
+    private bool _isInventoryOpen;
+    private float _cachedMoveSpeed;
+    private float _cachedRotationSpeed;
 
     private void Awake() {
         _characterController = GetComponent<CharacterController>();
@@ -21,8 +28,10 @@ public class PlayerController : MonoBehaviour {
 
         _cameraTransform = GetCameraTransform();
 
-        _inventoryStateProvider = DIContainer.Instance.Get<IInventoryStateProvider>() as InventoryStateProvider;
-        _configProvider = DIContainer.Instance.Get<IConfigProvider>() as ConfigProvider;
+        _inventoryStateProvider = DIContainer.Instance.Get<IInventoryStateProvider>();
+        if (!DIContainer.Instance.TryGet<IConfigProvider>(out _configProvider)) {
+            Debug.LogError("IConfigProvider not found in DI container");
+        }
 
         _moveAction = new InputAction(type: InputActionType.Value);
         _moveAction.AddCompositeBinding("2DVector").With("Up", "<Keyboard>/w").With("Down", "<Keyboard>/s").With("Left", "<Keyboard>/a")
@@ -34,19 +43,31 @@ public class PlayerController : MonoBehaviour {
         pos.y = 0f;
         transform.position = pos;
 
+        CacheConfigValues();
         FindPlatformBounds();
     }
 
+    private void CacheConfigValues() {
+        _cachedConfig = _configProvider.GetConfig();
+        _cachedMoveSpeed = _cachedConfig.PlayerMoveSpeed;
+        _cachedRotationSpeed = _cachedConfig.PlayerRotationSpeed;
+    }
+
     private void FindPlatformBounds() {
-        GameObject ground = GameObject.Find("Ground");
-        if (ground != null) {
-            BoxCollider groundCollider = ground.GetComponent<BoxCollider>();
+        if (_groundTransform == null) {
+            GameObject ground = GameObject.FindWithTag("Ground");
+            if (ground != null) {
+                _groundTransform = ground.transform;
+            }
+        }
+
+        if (_groundTransform != null) {
+            BoxCollider groundCollider = _groundTransform.GetComponent<BoxCollider>();
             if (groundCollider != null) {
                 _platformBounds = groundCollider.bounds;
             } else {
-                Transform groundTransform = ground.transform;
-                Vector3 groundScale = groundTransform.localScale;
-                Vector3 groundPosition = groundTransform.position;
+                Vector3 groundScale = _groundTransform.localScale;
+                Vector3 groundPosition = _groundTransform.position;
                 _platformBounds = new Bounds(groundPosition, groundScale);
             }
         } else {
@@ -75,6 +96,12 @@ public class PlayerController : MonoBehaviour {
     }
 
     private void Update() {
+        if (_cachedConfig.IsInventoryBlockingView && _inventoryStateProvider != null) {
+            _isInventoryOpen = _inventoryStateProvider.IsInventoryOpen();
+        } else {
+            _isInventoryOpen = false;
+        }
+
         HandleMovement();
         HandleRotation();
     }
@@ -94,11 +121,8 @@ public class PlayerController : MonoBehaviour {
     }
 
     private void HandleMovement() {
-        MainGameConfig config = _configProvider.GetConfig();
-        if (config.IsInventoryBlockingView) {
-            if (_inventoryStateProvider.IsInventoryOpen()) {
-                return;
-            }
+        if (_isInventoryOpen) {
+            return;
         }
 
         Transform camera = GetCameraTransform();
@@ -109,7 +133,7 @@ public class PlayerController : MonoBehaviour {
         Vector3 moveDirection = CalculateMoveDirection(_moveInput, camera);
 
         if (moveDirection.magnitude > 0.1f) {
-            float moveSpeed = config.PlayerMoveSpeed;
+            float moveSpeed = _cachedMoveSpeed > 0 ? _cachedMoveSpeed : 5f;
             Vector3 move = moveDirection * moveSpeed;
             _velocity.x = move.x;
             _velocity.z = move.z;
@@ -134,6 +158,10 @@ public class PlayerController : MonoBehaviour {
     }
 
     private void HandleRotation() {
+        if (_isInventoryOpen) {
+            return;
+        }
+
         if (_moveInput.magnitude > 0.1f) {
             Transform camera = GetCameraTransform();
             if (camera == null) {
@@ -143,8 +171,7 @@ public class PlayerController : MonoBehaviour {
             Vector3 moveDirection = CalculateMoveDirection(_moveInput, camera);
 
             if (moveDirection.magnitude > 0.1f) {
-                MainGameConfig config = _configProvider.GetConfig();
-                float rotationSpeed = config.PlayerRotationSpeed;
+                float rotationSpeed = _cachedRotationSpeed > 0 ? _cachedRotationSpeed : 10f;
                 Quaternion targetRotation = Quaternion.LookRotation(moveDirection);
                 transform.rotation = Quaternion.Slerp(transform.rotation, targetRotation, rotationSpeed * Time.deltaTime);
             }

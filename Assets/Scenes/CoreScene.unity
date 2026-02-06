@@ -183,6 +183,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::PlayerController
   _cameraTransform: {fileID: 963194228}
+  _groundTransform: {fileID: 588440675}
 --- !u!143 &71549571
 CharacterController:
   m_ObjectHideFlags: 0
@@ -476,7 +477,7 @@ GameObject:
   - component: {fileID: 588440672}
   m_Layer: 0
   m_Name: Ground
-  m_TagString: Untagged
+  m_TagString: Ground
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -925,6 +926,7 @@ MonoBehaviour:
   _uiDocument: {fileID: 1367645601}
   _inventoryWindowAsset: {fileID: 9197481963319205126, guid: 981545d1c7d964446822d9f8b3bcedba, type: 3}
   _inventoryWindowStyle: {fileID: 7433441132597879392, guid: 17fbd096d1e227847a8aaaaac19542b6, type: 3}
+  _inventoryReference: {fileID: 71549569}
 --- !u!114 &1367645601
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -975,6 +977,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 5605569f473e1f2488979c5700805df7, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::InventoryStateProvider
+  _inventoryUI: {fileID: 1367645600}
 --- !u!1 &1602293809
 GameObject:
   m_ObjectHideFlags: 0

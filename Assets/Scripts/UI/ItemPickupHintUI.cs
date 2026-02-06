@@ -7,12 +7,18 @@ public class ItemPickupHintUI : MonoBehaviour {
     private Label _hintLabel;
     private UIDocument _uiDocument;
     private bool _uiReady;
-    private ConfigProvider _configProvider;
-    private InventoryStateProvider _inventoryStateProvider;
+    private IConfigProvider _configProvider;
+    private IInventoryStateProvider _inventoryStateProvider;
+    private MainGameConfig _cachedConfig;
+    private float _cachedHintHeight;
+    private bool _cachedIsInventoryBlockingView;
 
     private void Awake() {
-        _configProvider = DIContainer.Instance.Get<IConfigProvider>() as ConfigProvider;
-        _inventoryStateProvider = DIContainer.Instance.Get<IInventoryStateProvider>() as InventoryStateProvider;
+        if (!DIContainer.Instance.TryGet<IConfigProvider>(out _configProvider)) {
+            Debug.LogError("IConfigProvider not found in DI container");
+        }
+
+        _inventoryStateProvider = DIContainer.Instance.Get<IInventoryStateProvider>();
     }
 
     private void Start() {
@@ -108,6 +114,12 @@ public class ItemPickupHintUI : MonoBehaviour {
         }
 
         _uiReady = true;
+
+        _cachedConfig = _configProvider.GetConfig();
+        if (_cachedConfig != null) {
+            _cachedHintHeight = _cachedConfig.PickupHintHeight;
+            _cachedIsInventoryBlockingView = _cachedConfig.IsInventoryBlockingView;
+        }
     }
 
     public void UpdateHint(CollectableItem nearbyItem) {
@@ -115,17 +127,15 @@ public class ItemPickupHintUI : MonoBehaviour {
             return;
         }
 
-        MainGameConfig config = _configProvider.GetConfig();
-        if (config.IsInventoryBlockingView) {
-            if (_inventoryStateProvider.IsInventoryOpen()) {
+        if (_cachedIsInventoryBlockingView) {
+            if (_inventoryStateProvider != null && _inventoryStateProvider.IsInventoryOpen()) {
                 _hintElement.style.display = DisplayStyle.None;
                 return;
             }
         }
 
         if (nearbyItem != null && Camera.main != null) {
-            float hintHeight = config.PickupHintHeight;
-            Vector3 worldPosition = nearbyItem.transform.position + Vector3.up * hintHeight;
+            Vector3 worldPosition = nearbyItem.transform.position + Vector3.up * _cachedHintHeight;
             Vector3 screenPosition = Camera.main.WorldToScreenPoint(worldPosition);
 
             if (screenPosition.z > 0) {

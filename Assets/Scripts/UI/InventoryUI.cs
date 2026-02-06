@@ -22,10 +22,13 @@ public class InventoryUI : MonoBehaviour {
     private Vector2 _lastCursorPosition;
     private bool _hasStoredCursorPosition;
 
+    [SerializeField]
+    private Inventory _inventoryReference;
+
     private void Awake() {
         _inventory = GetComponent<Inventory>();
-        if (_inventory == null) {
-            _inventory = FindAnyObjectByType<Inventory>();
+        if (_inventory == null && _inventoryReference != null) {
+            _inventory = _inventoryReference;
         }
 
         if (_uiDocument == null) {
@@ -317,15 +320,7 @@ public class InventoryUI : MonoBehaviour {
     }
 
     private Vector3 CalculateDropPosition() {
-        Transform playerTransform = _inventory.transform;
-        if (playerTransform == null) {
-            GameObject player = GameObject.FindGameObjectWithTag("Player");
-            if (player == null) {
-                return Vector3.zero;
-            }
-
-            playerTransform = player.transform;
-        }
+        Transform playerTransform = _inventory != null ? _inventory.transform : transform;
 
         Vector3 forwardDirection = Vector3.forward;
         Camera mainCamera = Camera.main;

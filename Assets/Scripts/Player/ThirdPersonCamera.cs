@@ -6,12 +6,21 @@ public class ThirdPersonCamera : MonoBehaviour {
 
     private float _currentRotationX;
     private float _currentRotationY;
-    private InventoryStateProvider _inventoryStateProvider;
-    private ConfigProvider _configProvider;
+    private IInventoryStateProvider _inventoryStateProvider;
+    private IConfigProvider _configProvider;
+    private MainGameConfig _cachedConfig;
+    private bool _isInventoryOpen;
+    private float _cachedRotationSpeed;
+    private float _cachedMinVerticalAngle;
+    private float _cachedMaxVerticalAngle;
+    private float _cachedDistance;
+    private float _cachedHeight;
 
     private void Awake() {
-        _inventoryStateProvider = DIContainer.Instance.Get<IInventoryStateProvider>() as InventoryStateProvider;
-        _configProvider = DIContainer.Instance.Get<IConfigProvider>() as ConfigProvider;
+        _inventoryStateProvider = DIContainer.Instance.Get<IInventoryStateProvider>();
+        if (!DIContainer.Instance.TryGet<IConfigProvider>(out _configProvider)) {
+            Debug.LogError("IConfigProvider not found in DI container");
+        }
     }
 
     private void Start() {
@@ -22,6 +31,8 @@ public class ThirdPersonCamera : MonoBehaviour {
             }
         }
 
+        CacheConfigValues();
+
         if (_target != null) {
             Vector3 direction = transform.position - _target.position;
             _currentRotationX = Mathf.Atan2(direction.x, direction.z) * Mathf.Rad2Deg;
@@ -30,6 +41,33 @@ public class ThirdPersonCamera : MonoBehaviour {
             Vector3 angles = transform.eulerAngles;
             _currentRotationX = angles.y;
             _currentRotationY = angles.x;
+        }
+    }
+
+    private void CacheConfigValues() {
+        if (_configProvider == null) {
+            Debug.LogError("ConfigProvider is null");
+            return;
+        }
+
+        _cachedConfig = _configProvider.GetConfig();
+        if (_cachedConfig == null) {
+            Debug.LogError("MainGameConfig is null");
+            return;
+        }
+
+        _cachedRotationSpeed = _cachedConfig.CameraRotationSpeed;
+        _cachedMinVerticalAngle = _cachedConfig.CameraMinVerticalAngle;
+        _cachedMaxVerticalAngle = _cachedConfig.CameraMaxVerticalAngle;
+        _cachedDistance = _cachedConfig.CameraDistance;
+        _cachedHeight = _cachedConfig.CameraHeight;
+    }
+
+    private void Update() {
+        if (_cachedConfig.IsInventoryBlockingView && _inventoryStateProvider != null) {
+            _isInventoryOpen = _inventoryStateProvider.IsInventoryOpen();
+        } else {
+            _isInventoryOpen = false;
         }
     }
 
@@ -43,29 +81,21 @@ public class ThirdPersonCamera : MonoBehaviour {
     }
 
     private void HandleRotation() {
-        MainGameConfig config = _configProvider.GetConfig();
-        if (config.IsInventoryBlockingView) {
-            if (_inventoryStateProvider.IsInventoryOpen()) {
-                return;
-            }
+        if (_isInventoryOpen) {
+            return;
         }
 
-        float rotationSpeed = config.CameraRotationSpeed;
-        float minVerticalAngle = config.CameraMinVerticalAngle;
-        float maxVerticalAngle = config.CameraMaxVerticalAngle;
-
-        float mouseX = Input.GetAxis("Mouse X") * rotationSpeed;
-        float mouseY = Input.GetAxis("Mouse Y") * rotationSpeed;
+        float mouseX = Input.GetAxis("Mouse X") * _cachedRotationSpeed;
+        float mouseY = Input.GetAxis("Mouse Y") * _cachedRotationSpeed;
 
         _currentRotationX += mouseX;
         _currentRotationY -= mouseY;
-        _currentRotationY = Mathf.Clamp(_currentRotationY, minVerticalAngle, maxVerticalAngle);
+        _currentRotationY = Mathf.Clamp(_currentRotationY, _cachedMinVerticalAngle, _cachedMaxVerticalAngle);
     }
 
     private void UpdateCameraPosition() {
-        MainGameConfig config = _configProvider.GetConfig();
-        float distance = config.CameraDistance;
-        float height = config.CameraHeight;
+        float distance = _cachedDistance;
+        float height = _cachedHeight;
 
         Quaternion rotation = Quaternion.Euler(_currentRotationY, _currentRotationX, 0);
         Vector3 direction = rotation * Vector3.back;

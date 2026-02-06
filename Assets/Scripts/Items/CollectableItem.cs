@@ -6,7 +6,7 @@ public class CollectableItem : MonoBehaviour {
     private Material _cachedMaterial;
 
     private void Awake() {
-        _itemPool = DIContainer.Instance.Get<ItemPool>();
+        DIContainer.Instance.TryGet<ItemPool>(out _itemPool);
     }
 
     public ItemData GetItemData() {

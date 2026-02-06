@@ -4,12 +4,23 @@ using UnityEngine;
 public class ItemSpawner : MonoBehaviour {
     private readonly List<ItemData> _itemsData = new();
     private readonly List<CollectableItem> _activeItems = new();
-    private ItemVisualFactory _itemFactory;
-    private ConfigProvider _configProvider;
+    private IItemFactory _itemFactory;
+    private IConfigProvider _configProvider;
+    private Transform _playerTransform;
 
     private void Awake() {
-        _itemFactory = DIContainer.Instance.Get<IItemFactory>() as ItemVisualFactory;
-        _configProvider = DIContainer.Instance.Get<IConfigProvider>() as ConfigProvider;
+        if (!DIContainer.Instance.TryGet<IItemFactory>(out _itemFactory)) {
+            Debug.LogError("IItemFactory not found in DI container");
+        }
+
+        if (!DIContainer.Instance.TryGet<IConfigProvider>(out _configProvider)) {
+            Debug.LogError("IConfigProvider not found in DI container");
+        }
+
+        GameObject player = GameObject.FindGameObjectWithTag("Player");
+        if (player != null) {
+            _playerTransform = player.transform;
+        }
     }
 
     private void Start() {
@@ -41,9 +52,18 @@ public class ItemSpawner : MonoBehaviour {
             return;
         }
 
+        if (_configProvider == null) {
+            Debug.LogError("ConfigProvider is null");
+            return;
+        }
+
         List<Vector3> spawnedPositions = new();
         int spawnedCount = 0;
         MainGameConfig config = _configProvider.GetConfig();
+        if (config == null) {
+            Debug.LogError("MainGameConfig is null");
+            return;
+        }
         int itemCount = config.ItemSpawnerItemCount;
 
         while (spawnedCount < itemCount && spawnedCount < _itemsData.Count) {
@@ -60,7 +80,15 @@ public class ItemSpawner : MonoBehaviour {
     }
 
     private Vector3 GetRandomPosition(List<Vector3> existingPositions, Vector3? playerPosition = null) {
+        if (_configProvider == null) {
+            return Vector3.zero;
+        }
+
         MainGameConfig config = _configProvider.GetConfig();
+        if (config == null) {
+            return Vector3.zero;
+        }
+
         float spawnRadius = config.ItemSpawnerRadius;
         float minDistance = config.ItemSpawnerMinDistance;
         float minDistanceFromPlayer = config.ItemSpawnerMinDistanceFromPlayer;
@@ -115,9 +143,8 @@ public class ItemSpawner : MonoBehaviour {
     }
 
     private Vector3? GetPlayerPosition() {
-        GameObject player = GameObject.FindWithTag("Player");
-        if (player != null) {
-            return player.transform.position;
+        if (_playerTransform != null) {
+            return _playerTransform.position;
         }
 
         return null;

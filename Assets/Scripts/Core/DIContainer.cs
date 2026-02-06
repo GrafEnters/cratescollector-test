@@ -20,7 +20,16 @@ public class DIContainer : MonoBehaviour {
     }
 
     public void Register<T>(T service) where T : class {
+        if (service == null) {
+            Debug.LogError($"Attempted to register null service of type {typeof(T).Name}");
+            return;
+        }
+
         Type type = typeof(T);
+        if (_services.ContainsKey(type)) {
+            Debug.LogWarning($"Service of type {type.Name} is already registered. Overwriting.");
+        }
+
         _services[type] = service;
     }
 
@@ -31,6 +40,32 @@ public class DIContainer : MonoBehaviour {
         }
 
         return null;
+    }
+
+    public T GetRequired<T>() where T : class {
+        Type type = typeof(T);
+        if (_services.TryGetValue(type, out object service)) {
+            T result = service as T;
+            if (result == null) {
+                Debug.LogError($"Service of type {type.Name} is registered but cast failed");
+                throw new InvalidCastException($"Failed to cast service to {type.Name}");
+            }
+            return result;
+        }
+
+        Debug.LogError($"Required service of type {type.Name} is not registered");
+        throw new InvalidOperationException($"Service of type {type.Name} is not registered");
+    }
+
+    public bool TryGet<T>(out T service) where T : class {
+        Type type = typeof(T);
+        if (_services.TryGetValue(type, out object serviceObj)) {
+            service = serviceObj as T;
+            return service != null;
+        }
+
+        service = null;
+        return false;
     }
 
     public bool Has<T>() where T : class {

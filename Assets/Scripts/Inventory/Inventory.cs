@@ -10,15 +10,22 @@ public class Inventory : MonoBehaviour {
     public event Action<int> OnSlotChanged;
 
     private void Awake() {
-        _configProvider = DIContainer.Instance.Get<IConfigProvider>();
-        _itemFactory = DIContainer.Instance.Get<IItemFactory>();
+        if (!DIContainer.Instance.TryGet<IConfigProvider>(out _configProvider)) {
+            Debug.LogError("IConfigProvider not found in DI container");
+            return;
+        }
 
-        if (_configProvider == null || _itemFactory == null) {
-            Debug.LogError("Failed to get required services from DI container");
+        if (!DIContainer.Instance.TryGet<IItemFactory>(out _itemFactory)) {
+            Debug.LogError("IItemFactory not found in DI container");
             return;
         }
 
         MainGameConfig config = _configProvider.GetConfig();
+        if (config == null) {
+            Debug.LogError("MainGameConfig is null");
+            return;
+        }
+
         int slotCount = config.InventorySlotCount;
         _slots = new InventorySlot[slotCount];
         for (int i = 0; i < slotCount; i++) {

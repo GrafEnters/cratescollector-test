@@ -14,19 +14,36 @@ public class ItemPickup : MonoBehaviour {
     private IItemOutlineManager _outlineManager;
     private ItemPickupHintUI _hintUI;
     private IConfigProvider _configProvider;
+    private float _cachedPickupDistance;
 
     private InputAction _interactAction;
     private CollectableItem _nearbyItem;
 
     private void Awake() {
-        _itemDetector = DIContainer.Instance.Get<IItemDetector>();
-        _outlineManager = DIContainer.Instance.Get<IItemOutlineManager>();
+        if (!DIContainer.Instance.TryGet<IItemDetector>(out _itemDetector)) {
+            Debug.LogError("IItemDetector not found in DI container");
+        }
+
+        if (!DIContainer.Instance.TryGet<IItemOutlineManager>(out _outlineManager)) {
+            Debug.LogError("IItemOutlineManager not found in DI container");
+        }
+
         _inventory = GetComponent<Inventory>();
         _hintUI = GetComponent<ItemPickupHintUI>();
         _notification = GetComponent<InventoryFullNotification>();
-        _configProvider = DIContainer.Instance.Get<IConfigProvider>();
+
+        if (!DIContainer.Instance.TryGet<IConfigProvider>(out _configProvider)) {
+            Debug.LogError("IConfigProvider not found in DI container");
+        }
 
         _interactAction = new InputAction("Interact", InputActionType.Button, "<Keyboard>/e");
+    }
+
+    private void Start() {
+        MainGameConfig config = _configProvider.GetConfig();
+        if (config != null) {
+            _cachedPickupDistance = config.PickupDistance;
+        }
     }
 
     private void OnEnable() {
@@ -45,14 +62,11 @@ public class ItemPickup : MonoBehaviour {
     }
 
     private void CheckForNearbyItems() {
-        if (_configProvider == null || _itemDetector == null || _outlineManager == null) {
+        if (_itemDetector == null || _outlineManager == null) {
             return;
         }
 
-        MainGameConfig config = _configProvider.GetConfig();
-        float pickupDistance = config.PickupDistance;
-
-        CollectableItem newNearbyItem = _itemDetector.FindNearestItem(transform.position, pickupDistance, _itemLayer);
+        CollectableItem newNearbyItem = _itemDetector.FindNearestItem(transform.position, _cachedPickupDistance, _itemLayer);
 
         if (newNearbyItem != _nearbyItem) {
             if (_nearbyItem != null) {
@@ -68,7 +82,9 @@ public class ItemPickup : MonoBehaviour {
     }
 
     private void UpdateHint() {
-        _hintUI.UpdateHint(_nearbyItem);
+        if (_hintUI != null) {
+            _hintUI.UpdateHint(_nearbyItem);
+        }
     }
 
     private void OnInteract(InputAction.CallbackContext context) {
@@ -96,13 +112,7 @@ public class ItemPickup : MonoBehaviour {
     }
 
     private void OnDrawGizmosSelected() {
-        if (_configProvider == null) {
-            return;
-        }
-
-        MainGameConfig config = _configProvider.GetConfig();
-        float pickupDistance = config.PickupDistance;
         Gizmos.color = Color.yellow;
-        Gizmos.DrawWireSphere(transform.position, pickupDistance);
+        Gizmos.DrawWireSphere(transform.position, _cachedPickupDistance);
     }
 }

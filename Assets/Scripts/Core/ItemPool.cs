@@ -4,13 +4,21 @@ using UnityEngine;
 [DefaultExecutionOrder(-999)]
 public class ItemPool : MonoBehaviour {
     private readonly Queue<GameObject> _pool = new();
-    private ConfigProvider _configProvider;
+    private IConfigProvider _configProvider;
     private Transform _poolParent;
     private int _poolSize;
 
     private void Awake() {
-        _configProvider = DIContainer.Instance.Get<IConfigProvider>() as ConfigProvider;
+        if (!DIContainer.Instance.TryGet<IConfigProvider>(out _configProvider)) {
+            Debug.LogError("IConfigProvider not found in DI container");
+            return;
+        }
+
         MainGameConfig config = _configProvider.GetConfig();
+        if (config == null) {
+            Debug.LogError("Failed to get MainGameConfig from ConfigProvider");
+            return;
+        }
         _poolSize = config.ItemPoolSize;
 
         GameObject poolParentObject = new("ItemPool");
@@ -44,8 +52,8 @@ public class ItemPool : MonoBehaviour {
     }
 
     private GameObject CreateItemObject() {
-        MainGameConfig config = _configProvider.GetConfig();
-        float itemScale = config.ItemScale;
+        MainGameConfig config = _configProvider?.GetConfig();
+        float itemScale = config != null ? config.ItemScale : 0.5f;
 
         GameObject itemObject = GameObject.CreatePrimitive(PrimitiveType.Cube);
         itemObject.transform.localScale = Vector3.one * itemScale;
