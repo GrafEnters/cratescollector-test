@@ -14,6 +14,7 @@ public class ItemPickup : MonoBehaviour
     private Inventory inventory;
     private UIDocument uiDocument;
     private ItemSpawner itemSpawner;
+    private InventoryFullNotification notification;
     private bool uiReady = false;
 
     private void Awake()
@@ -25,6 +26,14 @@ public class ItemPickup : MonoBehaviour
         }
 
         itemSpawner = FindObjectOfType<ItemSpawner>();
+
+        notification = GetComponent<InventoryFullNotification>();
+        if (notification == null)
+        {
+            GameObject notificationObject = new GameObject("InventoryFullNotification");
+            notificationObject.transform.SetParent(transform);
+            notification = notificationObject.AddComponent<InventoryFullNotification>();
+        }
 
         interactAction = new InputAction("Interact", InputActionType.Button, "<Keyboard>/e");
     }
@@ -288,6 +297,13 @@ public class ItemPickup : MonoBehaviour
                     }
                     
                     nearbyItem = null;
+                }
+                else
+                {
+                    if (notification != null)
+                    {
+                        notification.Show();
+                    }
                 }
             }
         }
