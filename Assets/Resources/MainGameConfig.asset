@@ -19,6 +19,7 @@ MonoBehaviour:
   itemSpawnerItemCount: 6
   itemSpawnerRadius: 10
   itemSpawnerMinDistance: 2
+  itemSpawnerMinDistanceFromPlayer: 3
   itemSpawnerHeight: 0.5
   itemScale: 0.5
   itemSpawnerMaxAttempts: 50

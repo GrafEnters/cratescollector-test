@@ -62,10 +62,11 @@ public class ItemSpawner : MonoBehaviour
         }
     }
 
-    private Vector3 GetRandomPosition(List<Vector3> existingPositions)
+    private Vector3 GetRandomPosition(List<Vector3> existingPositions, Vector3? playerPosition = null)
     {
         float spawnRadius = ConfigManager.Config != null ? ConfigManager.Config.itemSpawnerRadius : 10f;
         float minDistance = ConfigManager.Config != null ? ConfigManager.Config.itemSpawnerMinDistance : 2f;
+        float minDistanceFromPlayer = ConfigManager.Config != null ? ConfigManager.Config.itemSpawnerMinDistanceFromPlayer : 3f;
         float spawnHeight = ConfigManager.Config != null ? ConfigManager.Config.itemSpawnerHeight : 0.5f;
         int attempts = ConfigManager.Config != null ? ConfigManager.Config.itemSpawnerMaxAttempts : 50;
         
@@ -81,6 +82,16 @@ public class ItemSpawner : MonoBehaviour
                 {
                     tooClose = true;
                     break;
+                }
+            }
+
+            if (!tooClose && playerPosition.HasValue)
+            {
+                Vector3 playerPos = playerPosition.Value;
+                playerPos.y = position.y;
+                if (Vector3.Distance(position, playerPos) < minDistanceFromPlayer)
+                {
+                    tooClose = true;
                 }
             }
 
@@ -121,11 +132,22 @@ public class ItemSpawner : MonoBehaviour
     public void SpawnItemAtRandomPosition(ItemData itemData)
     {
         List<Vector3> existingPositions = GetAllItemPositions();
-        Vector3 position = GetRandomPosition(existingPositions);
+        Vector3? playerPosition = GetPlayerPosition();
+        Vector3 position = GetRandomPosition(existingPositions, playerPosition);
         if (position != Vector3.zero)
         {
             SpawnItem(itemData, position);
         }
+    }
+
+    private Vector3? GetPlayerPosition()
+    {
+        GameObject player = GameObject.FindWithTag("Player");
+        if (player != null)
+        {
+            return player.transform.position;
+        }
+        return null;
     }
 
     private List<Vector3> GetAllItemPositions()

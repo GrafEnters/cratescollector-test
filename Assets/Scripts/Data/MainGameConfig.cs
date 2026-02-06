@@ -16,6 +16,7 @@ public class MainGameConfig : ScriptableObject
     public int itemSpawnerItemCount = 6;
     public float itemSpawnerRadius = 10f;
     public float itemSpawnerMinDistance = 2f;
+    public float itemSpawnerMinDistanceFromPlayer = 3f;
     public float itemSpawnerHeight = 0.5f;
     public float itemScale = 0.5f;
     public int itemSpawnerMaxAttempts = 50;
