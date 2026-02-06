@@ -1,0 +1,87 @@
+.inventory-window {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    width: 400px;
+    height: 500px;
+    margin-left: -200px;
+    margin-top: -250px;
+    background-color: rgba(30, 30, 30, 0.95);
+    border-width: 2px;
+    border-color: rgba(100, 100, 100, 1);
+    border-radius: 5px;
+    display: none;
+}
+
+.inventory-window.visible {
+    display: flex;
+}
+
+.inventory-container {
+    flex-grow: 1;
+    flex-direction: column;
+    padding: 10px;
+}
+
+.inventory-title {
+    font-size: 24px;
+    color: white;
+    margin-bottom: 10px;
+    text-align: center;
+}
+
+.inventory-grid {
+    flex-grow: 1;
+    flex-direction: row;
+    flex-wrap: wrap;
+    justify-content: flex-start;
+    align-content: flex-start;
+}
+
+.inventory-slot {
+    width: 80px;
+    height: 80px;
+    margin: 5px;
+    background-color: rgba(50, 50, 50, 1);
+    border-width: 2px;
+    border-color: rgba(100, 100, 100, 1);
+    border-radius: 3px;
+}
+
+.inventory-slot:hover {
+    border-color: rgba(150, 150, 150, 1);
+    background-color: rgba(60, 60, 60, 1);
+}
+
+.inventory-slot.dragging {
+    border-color: rgba(100, 200, 255, 1);
+    background-color: rgba(70, 100, 130, 1);
+}
+
+.inventory-slot.drag-over {
+    border-color: rgba(100, 255, 100, 1);
+    background-color: rgba(70, 130, 70, 1);
+}
+
+.inventory-slot.empty {
+    background-color: rgba(40, 40, 40, 1);
+}
+
+.slot-icon {
+    width: 100%;
+    height: 100%;
+    background-size: contain;
+    background-repeat: no-repeat;
+    background-position: center;
+}
+
+.slot-quantity {
+    position: absolute;
+    right: 5px;
+    bottom: 5px;
+    font-size: 14px;
+    color: white;
+    background-color: rgba(0, 0, 0, 0.7);
+    padding: 2px 5px;
+    border-radius: 3px;
+}

@@ -1,0 +1,21 @@
+<ui:UXML xmlns:ui="UnityEngine.UIElements" xmlns:uie="UnityEditor.UIElements" xsi="http://www.w3.org/2001/XMLSchema-instance" engine="UnityEngine.UIElements" editor="UnityEditor.UIElements" noNamespaceSchemaLocation="../../UIElementsSchema/UIElements.xsd" editor-extension-mode="False">
+    <ui:VisualElement name="InventoryWindow" class="inventory-window">
+        <ui:VisualElement name="InventoryContainer" class="inventory-container">
+            <ui:Label text="Инвентарь" name="InventoryTitle" class="inventory-title" />
+            <ui:VisualElement name="InventoryGrid" class="inventory-grid">
+                <ui:VisualElement name="Slot0" class="inventory-slot" />
+                <ui:VisualElement name="Slot1" class="inventory-slot" />
+                <ui:VisualElement name="Slot2" class="inventory-slot" />
+                <ui:VisualElement name="Slot3" class="inventory-slot" />
+                <ui:VisualElement name="Slot4" class="inventory-slot" />
+                <ui:VisualElement name="Slot5" class="inventory-slot" />
+                <ui:VisualElement name="Slot6" class="inventory-slot" />
+                <ui:VisualElement name="Slot7" class="inventory-slot" />
+                <ui:VisualElement name="Slot8" class="inventory-slot" />
+                <ui:VisualElement name="Slot9" class="inventory-slot" />
+                <ui:VisualElement name="Slot10" class="inventory-slot" />
+                <ui:VisualElement name="Slot11" class="inventory-slot" />
+            </ui:VisualElement>
+        </ui:VisualElement>
+    </ui:VisualElement>
+</ui:UXML>
