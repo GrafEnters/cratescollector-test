@@ -33,68 +33,123 @@ public class InventorySlotUI
 
     private bool isDragging = false;
     private Vector2 dragStartPosition;
+    private int capturedPointerId = -1;
 
     private void OnPointerDown(PointerDownEvent evt)
     {
+        if (inventoryUI == null || slotElement == null) return;
+        
         if (evt.button == 1)
         {
             inventoryUI.DropItem(slotIndex);
             return;
         }
 
-        InventorySlot slot = inventoryUI.GetInventory().GetSlot(slotIndex);
-        if (!slot.IsEmpty())
+        Inventory inventory = inventoryUI.GetInventory();
+        if (inventory == null) return;
+        
+        InventorySlot slot = inventory.GetSlot(slotIndex);
+        if (slot == null || slot.IsEmpty()) return;
+        
+        isDragging = true;
+        dragStartPosition = evt.position;
+        capturedPointerId = evt.pointerId;
+        slotElement.AddToClassList("dragging");
+        slotElement.CapturePointer(evt.pointerId);
+        
+        if (slotElement.panel != null)
         {
-            isDragging = true;
-            dragStartPosition = evt.position;
-            slotElement.AddToClassList("dragging");
-            evt.StopPropagation();
+            VisualElement root = slotElement.panel.visualTree;
+            if (root != null)
+            {
+                root.RegisterCallback<PointerMoveEvent>(OnGlobalPointerMove);
+                root.RegisterCallback<PointerUpEvent>(OnGlobalPointerUp);
+            }
         }
+        
+        evt.StopPropagation();
     }
 
     private void OnPointerMove(PointerMoveEvent evt)
     {
-        if (isDragging)
+        if (isDragging && evt.pointerId == capturedPointerId && slotElement != null)
         {
-            VisualElement elementUnderPointer = evt.target as VisualElement;
-            ClearDragOverStates();
-            
-            if (elementUnderPointer != null)
+            HandleDragMove(evt.position, slotElement.panel);
+        }
+    }
+
+    private void OnGlobalPointerMove(PointerMoveEvent evt)
+    {
+        if (isDragging && evt.pointerId == capturedPointerId && slotElement != null)
+        {
+            HandleDragMove(evt.position, slotElement.panel);
+        }
+    }
+
+    private void HandleDragMove(Vector2 position, IPanel panel)
+    {
+        if (panel == null) return;
+        
+        VisualElement elementUnderPointer = panel.Pick(position) as VisualElement;
+        ClearDragOverStates();
+        
+        if (elementUnderPointer != null)
+        {
+            VisualElement slotElement = FindSlotElement(elementUnderPointer);
+            if (slotElement != null && slotElement != this.slotElement)
             {
-                VisualElement slotElement = FindSlotElement(elementUnderPointer);
-                if (slotElement != null && slotElement != this.slotElement)
-                {
-                    slotElement.AddToClassList("drag-over");
-                }
+                slotElement.AddToClassList("drag-over");
             }
         }
     }
 
     private void OnPointerUp(PointerUpEvent evt)
     {
-        if (isDragging)
+        if (isDragging && evt.pointerId == capturedPointerId && slotElement != null)
         {
-            VisualElement targetElement = evt.target as VisualElement;
-            VisualElement targetSlot = FindSlotElement(targetElement);
-            
-            int targetSlotIndex = -1;
-            if (targetSlot != null)
-            {
-                targetSlotIndex = inventoryUI.GetSlotIndexFromElement(targetSlot);
-            }
+            HandleDragEnd(evt.position, slotElement.panel);
+        }
+    }
 
+    private void OnGlobalPointerUp(PointerUpEvent evt)
+    {
+        if (isDragging && evt.pointerId == capturedPointerId && slotElement != null)
+        {
+            HandleDragEnd(evt.position, slotElement.panel);
+        }
+    }
+
+    private void HandleDragEnd(Vector2 position, IPanel panel)
+    {
+        if (panel == null || inventoryUI == null)
+        {
+            ClearDragState();
+            return;
+        }
+        
+        VisualElement targetElement = panel.Pick(position) as VisualElement;
+        VisualElement targetSlot = FindSlotElement(targetElement);
+        
+        int targetSlotIndex = -1;
+        if (targetSlot != null)
+        {
+            targetSlotIndex = inventoryUI.GetSlotIndexFromElement(targetSlot);
+        }
+
+        Inventory inventory = inventoryUI.GetInventory();
+        if (inventory != null)
+        {
             if (targetSlotIndex >= 0 && targetSlotIndex != slotIndex)
             {
-                inventoryUI.GetInventory().MoveItem(slotIndex, targetSlotIndex);
+                inventory.MoveItem(slotIndex, targetSlotIndex);
             }
             else if (targetSlotIndex < 0)
             {
                 inventoryUI.DropItem(slotIndex);
             }
-
-            ClearDragState();
-            evt.StopPropagation();
         }
+
+        ClearDragState();
     }
 
     private VisualElement FindSlotElement(VisualElement element)
@@ -116,37 +171,75 @@ public class InventorySlotUI
 
     private void ClearDragOverStates()
     {
-        VisualElement root = slotElement.parent;
-        if (root != null)
+        if (slotElement == null) return;
+        
+        VisualElement grid = FindInventoryGrid();
+        if (grid != null)
         {
-            foreach (VisualElement child in root.Children())
-            {
-                if (child.ClassListContains("drag-over"))
-                {
-                    child.RemoveFromClassList("drag-over");
-                }
-            }
+            grid.Query(className: "drag-over").ForEach(elem => elem.RemoveFromClassList("drag-over"));
         }
+    }
+
+    private VisualElement FindInventoryGrid()
+    {
+        if (slotElement == null) return null;
+        
+        VisualElement current = slotElement;
+        while (current != null)
+        {
+            if (current.ClassListContains("inventory-grid"))
+            {
+                return current;
+            }
+            current = current.parent;
+        }
+        return null;
     }
 
     private void OnPointerLeave(PointerLeaveEvent evt)
     {
-        if (isDragging)
-        {
-            ClearDragState();
-        }
+        
     }
 
     private void ClearDragState()
     {
         isDragging = false;
-        slotElement.RemoveFromClassList("dragging");
+        
+        if (slotElement != null)
+        {
+            slotElement.RemoveFromClassList("dragging");
+            
+            if (slotElement.panel != null)
+            {
+                VisualElement root = slotElement.panel.visualTree;
+                if (root != null)
+                {
+                    root.UnregisterCallback<PointerMoveEvent>(OnGlobalPointerMove);
+                    root.UnregisterCallback<PointerUpEvent>(OnGlobalPointerUp);
+                }
+            }
+            
+            if (capturedPointerId >= 0 && slotElement.panel != null)
+            {
+                try
+                {
+                    slotElement.ReleasePointer(capturedPointerId);
+                }
+                catch
+                {
+                }
+            }
+        }
+        
+        capturedPointerId = -1;
         ClearDragOverStates();
     }
 
     public void UpdateSlot(InventorySlot slot)
     {
-        if (slot.IsEmpty())
+        if (slotElement == null || iconElement == null || quantityLabel == null) return;
+        
+        if (slot == null || slot.IsEmpty())
         {
             slotElement.AddToClassList("empty");
             iconElement.style.display = DisplayStyle.None;
@@ -158,7 +251,7 @@ public class InventorySlotUI
             iconElement.style.display = DisplayStyle.Flex;
             iconElement.style.backgroundColor = slot.item.color;
 
-            if (slot.item.stackable && slot.quantity > 1)
+            if (slot.item != null && slot.item.stackable && slot.quantity > 1)
             {
                 quantityLabel.text = slot.quantity.ToString();
                 quantityLabel.style.display = DisplayStyle.Flex;
