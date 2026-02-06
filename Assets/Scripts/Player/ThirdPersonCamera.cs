@@ -3,11 +3,6 @@ using UnityEngine;
 public class ThirdPersonCamera : MonoBehaviour
 {
     [SerializeField] private Transform target;
-    [SerializeField] private float distance = 5f;
-    [SerializeField] private float height = 2f;
-    [SerializeField] private float rotationSpeed = 2f;
-    [SerializeField] private float minVerticalAngle = -30f;
-    [SerializeField] private float maxVerticalAngle = 60f;
 
     private float currentRotationX;
     private float currentRotationY;
@@ -47,6 +42,10 @@ public class ThirdPersonCamera : MonoBehaviour
 
     private void HandleRotation()
     {
+        float rotationSpeed = ConfigManager.Config != null ? ConfigManager.Config.cameraRotationSpeed : 2f;
+        float minVerticalAngle = ConfigManager.Config != null ? ConfigManager.Config.cameraMinVerticalAngle : -30f;
+        float maxVerticalAngle = ConfigManager.Config != null ? ConfigManager.Config.cameraMaxVerticalAngle : 60f;
+        
         float mouseX = Input.GetAxis("Mouse X") * rotationSpeed;
         float mouseY = Input.GetAxis("Mouse Y") * rotationSpeed;
 
@@ -57,6 +56,9 @@ public class ThirdPersonCamera : MonoBehaviour
 
     private void UpdateCameraPosition()
     {
+        float distance = ConfigManager.Config != null ? ConfigManager.Config.cameraDistance : 5f;
+        float height = ConfigManager.Config != null ? ConfigManager.Config.cameraHeight : 2f;
+        
         Quaternion rotation = Quaternion.Euler(currentRotationY, currentRotationX, 0);
         Vector3 direction = rotation * Vector3.back;
         Vector3 targetPosition = target.position + Vector3.up * height;

@@ -1,0 +1,30 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 2dcb94d21340d414dad55b17a9cb9302, type: 3}
+  m_Name: MainGameConfig
+  m_EditorClassIdentifier: Assembly-CSharp::MainGameConfig
+  playerMoveSpeed: 5
+  playerRotationSpeed: 10
+  inventorySlotCount: 12
+  itemSpawnerItemCount: 6
+  itemSpawnerRadius: 10
+  itemSpawnerMinDistance: 2
+  itemSpawnerHeight: 0.5
+  itemScale: 0.5
+  itemSpawnerMaxAttempts: 50
+  cameraDistance: 5
+  cameraHeight: 2
+  cameraRotationSpeed: 2
+  cameraMinVerticalAngle: -30
+  cameraMaxVerticalAngle: 60
+  pickupDistance: 2
+  pickupHintHeight: 0.75

@@ -5,8 +5,6 @@ using System.Collections;
 [RequireComponent(typeof(CharacterController))]
 public class PlayerController : MonoBehaviour
 {
-    [SerializeField] private float moveSpeed = 5f;
-    [SerializeField] private float rotationSpeed = 10f;
     [SerializeField] private Transform cameraTransform;
 
     private CharacterController characterController;
@@ -120,6 +118,7 @@ public class PlayerController : MonoBehaviour
 
         if (moveDirection.magnitude > 0.1f)
         {
+            float moveSpeed = ConfigManager.Config != null ? ConfigManager.Config.playerMoveSpeed : 5f;
             Vector3 move = moveDirection * moveSpeed;
             velocity.x = move.x;
             velocity.z = move.z;
@@ -150,6 +149,7 @@ public class PlayerController : MonoBehaviour
             
             if (moveDirection.magnitude > 0.1f)
             {
+                float rotationSpeed = ConfigManager.Config != null ? ConfigManager.Config.playerRotationSpeed : 10f;
                 Quaternion targetRotation = Quaternion.LookRotation(moveDirection);
                 transform.rotation = Quaternion.Slerp(transform.rotation, targetRotation, rotationSpeed * Time.deltaTime);
             }

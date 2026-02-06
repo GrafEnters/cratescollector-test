@@ -3,10 +3,6 @@ using System.Collections.Generic;
 
 public class ItemSpawner : MonoBehaviour
 {
-    [SerializeField] private int itemCount = 6;
-    [SerializeField] private float spawnRadius = 10f;
-    [SerializeField] private float minDistance = 2f;
-
     private List<ItemData> itemsData = new List<ItemData>();
 
     private void Start()
@@ -47,6 +43,7 @@ public class ItemSpawner : MonoBehaviour
 
         List<Vector3> spawnedPositions = new List<Vector3>();
         int spawnedCount = 0;
+        int itemCount = ConfigManager.Config != null ? ConfigManager.Config.itemSpawnerItemCount : 6;
 
         while (spawnedCount < itemCount && spawnedCount < itemsData.Count)
         {
@@ -67,11 +64,15 @@ public class ItemSpawner : MonoBehaviour
 
     private Vector3 GetRandomPosition(List<Vector3> existingPositions)
     {
-        int attempts = 50;
+        float spawnRadius = ConfigManager.Config != null ? ConfigManager.Config.itemSpawnerRadius : 10f;
+        float minDistance = ConfigManager.Config != null ? ConfigManager.Config.itemSpawnerMinDistance : 2f;
+        float spawnHeight = ConfigManager.Config != null ? ConfigManager.Config.itemSpawnerHeight : 0.5f;
+        int attempts = ConfigManager.Config != null ? ConfigManager.Config.itemSpawnerMaxAttempts : 50;
+        
         for (int i = 0; i < attempts; i++)
         {
             Vector2 randomCircle = Random.insideUnitCircle * spawnRadius;
-            Vector3 position = transform.position + new Vector3(randomCircle.x, 0.5f, randomCircle.y);
+            Vector3 position = transform.position + new Vector3(randomCircle.x, spawnHeight, randomCircle.y);
 
             bool tooClose = false;
             foreach (Vector3 existingPos in existingPositions)
@@ -96,7 +97,8 @@ public class ItemSpawner : MonoBehaviour
     {
         GameObject itemObject = GameObject.CreatePrimitive(PrimitiveType.Cube);
         itemObject.transform.position = position;
-        itemObject.transform.localScale = Vector3.one * 0.5f;
+        float itemScale = ConfigManager.Config != null ? ConfigManager.Config.itemScale : 0.5f;
+        itemObject.transform.localScale = Vector3.one * itemScale;
         itemObject.name = itemData.name;
 
         MeshRenderer renderer = itemObject.GetComponent<MeshRenderer>();

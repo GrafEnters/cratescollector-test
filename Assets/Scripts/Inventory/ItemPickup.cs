@@ -5,7 +5,6 @@ using System.Collections;
 
 public class ItemPickup : MonoBehaviour
 {
-    [SerializeField] private float pickupDistance = 2f;
     [SerializeField] private LayerMask itemLayer = -1;
 
     private InputAction interactAction;
@@ -149,6 +148,8 @@ public class ItemPickup : MonoBehaviour
 
     private void CheckForNearbyItems()
     {
+        float pickupDistance = ConfigManager.Config != null ? ConfigManager.Config.pickupDistance : 2f;
+        
         int layerMask = itemLayer.value;
         if (layerMask == 0)
         {
@@ -182,7 +183,8 @@ public class ItemPickup : MonoBehaviour
 
         if (nearbyItem != null && Camera.main != null)
         {
-            Vector3 worldPosition = nearbyItem.transform.position + Vector3.up * 0.75f;
+            float hintHeight = ConfigManager.Config != null ? ConfigManager.Config.pickupHintHeight : 0.75f;
+            Vector3 worldPosition = nearbyItem.transform.position + Vector3.up * hintHeight;
             Vector3 screenPosition = Camera.main.WorldToScreenPoint(worldPosition);
             
             if (screenPosition.z > 0)
@@ -249,6 +251,7 @@ public class ItemPickup : MonoBehaviour
 
     private void OnDrawGizmosSelected()
     {
+        float pickupDistance = ConfigManager.Config != null ? ConfigManager.Config.pickupDistance : 2f;
         Gizmos.color = Color.yellow;
         Gizmos.DrawWireSphere(transform.position, pickupDistance);
     }

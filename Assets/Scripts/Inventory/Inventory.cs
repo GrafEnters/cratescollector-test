@@ -3,13 +3,13 @@ using System;
 
 public class Inventory : MonoBehaviour
 {
-    [SerializeField] private int slotCount = 12;
     private InventorySlot[] slots;
 
     public event Action<int> OnSlotChanged;
 
     private void Awake()
     {
+        int slotCount = ConfigManager.Config != null ? ConfigManager.Config.inventorySlotCount : 12;
         slots = new InventorySlot[slotCount];
         for (int i = 0; i < slotCount; i++)
         {
@@ -122,7 +122,8 @@ public class Inventory : MonoBehaviour
 
         GameObject droppedItem = GameObject.CreatePrimitive(PrimitiveType.Cube);
         droppedItem.transform.position = position;
-        droppedItem.transform.localScale = Vector3.one * 0.5f;
+        float itemScale = ConfigManager.Config != null ? ConfigManager.Config.itemScale : 0.5f;
+        droppedItem.transform.localScale = Vector3.one * itemScale;
         droppedItem.name = item.name;
 
         MeshRenderer renderer = droppedItem.GetComponent<MeshRenderer>();
