@@ -22,6 +22,9 @@ public class MainGameConfig : ScriptableObject {
     public float ItemScale = 0.5f;
     public int ItemSpawnerMaxAttempts = 50;
 
+    [Header("Item Pool")]
+    public int ItemPoolSize = 20;
+
     [Header("Camera")]
     public float CameraDistance = 5f;
 

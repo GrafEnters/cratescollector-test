@@ -17,6 +17,9 @@ public class DIInitializer : MonoBehaviour {
     [SerializeField]
     private ItemOutlineManager _itemOutlineManager;
 
+    [SerializeField]
+    private ItemPool _itemPool;
+
     private void Awake() {
         DIContainer container = DIContainer.Instance;
 
@@ -38,6 +41,10 @@ public class DIInitializer : MonoBehaviour {
 
         if (_itemOutlineManager != null) {
             container.Register<IItemOutlineManager>(_itemOutlineManager);
+        }
+
+        if (_itemPool != null) {
+            container.Register(_itemPool);
         }
     }
 }

@@ -2,6 +2,11 @@ using UnityEngine;
 
 public class CollectableItem : MonoBehaviour {
     private ItemData _itemData;
+    private ItemPool _itemPool;
+
+    private void Awake() {
+        _itemPool = DIContainer.Instance.Get<ItemPool>();
+    }
 
     public ItemData GetItemData() {
         return _itemData;
@@ -29,6 +34,10 @@ public class CollectableItem : MonoBehaviour {
     }
 
     public void Pickup() {
-        Destroy(gameObject);
+        if (_itemPool != null) {
+            _itemPool.Return(gameObject);
+        } else {
+            Destroy(gameObject);
+        }
     }
 }
