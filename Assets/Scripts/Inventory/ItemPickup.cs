@@ -174,7 +174,31 @@ public class ItemPickup : MonoBehaviour
             }
         }
 
-        nearbyItem = closestItem;
+        CollectableItem newNearbyItem = closestItem;
+        
+        if (newNearbyItem != nearbyItem)
+        {
+            if (nearbyItem != null)
+            {
+                ItemOutline outline = nearbyItem.GetComponent<ItemOutline>();
+                if (outline != null)
+                {
+                    outline.HideOutline();
+                }
+            }
+            
+            if (newNearbyItem != null)
+            {
+                ItemOutline outline = newNearbyItem.GetComponent<ItemOutline>();
+                if (outline == null)
+                {
+                    outline = newNearbyItem.gameObject.AddComponent<ItemOutline>();
+                }
+                outline.ShowOutline();
+            }
+            
+            nearbyItem = newNearbyItem;
+        }
     }
 
     private void UpdateHint()
@@ -247,6 +271,15 @@ public class ItemPickup : MonoBehaviour
             {
                 if (inventory.AddItem(itemData, 1))
                 {
+                    if (nearbyItem != null)
+                    {
+                        ItemOutline outline = nearbyItem.GetComponent<ItemOutline>();
+                        if (outline != null)
+                        {
+                            outline.HideOutline();
+                        }
+                    }
+                    
                     nearbyItem.Pickup();
                     
                     if (itemSpawner != null)

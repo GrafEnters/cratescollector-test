@@ -133,6 +133,8 @@ public class Inventory : MonoBehaviour
 
         CollectableItem collectable = droppedItem.AddComponent<CollectableItem>();
         collectable.SetItemData(item);
+        
+        droppedItem.AddComponent<ItemOutline>();
 
         Collider collider = droppedItem.GetComponent<Collider>();
         if (collider != null)

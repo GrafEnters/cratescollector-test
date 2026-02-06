@@ -114,6 +114,8 @@ public class ItemSpawner : MonoBehaviour
 
         CollectableItem collectable = itemObject.AddComponent<CollectableItem>();
         collectable.SetItemData(itemData);
+        
+        itemObject.AddComponent<ItemOutline>();
     }
 
     public void SpawnItemAtRandomPosition(ItemData itemData)

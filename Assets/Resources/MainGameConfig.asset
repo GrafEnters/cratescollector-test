@@ -12,6 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 2dcb94d21340d414dad55b17a9cb9302, type: 3}
   m_Name: MainGameConfig
   m_EditorClassIdentifier: Assembly-CSharp::MainGameConfig
+  IsInventoryBlockingView: 1
   playerMoveSpeed: 5
   playerRotationSpeed: 10
   inventorySlotCount: 12
@@ -28,3 +29,5 @@ MonoBehaviour:
   cameraMaxVerticalAngle: 60
   pickupDistance: 2
   pickupHintHeight: 0.75
+  outlineColor: {r: 0, g: 0, b: 0, a: 0.8}
+  outlineWidth: 10

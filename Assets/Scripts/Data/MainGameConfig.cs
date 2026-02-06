@@ -30,4 +30,9 @@ public class MainGameConfig : ScriptableObject
     [Header("Item Pickup")]
     public float pickupDistance = 2f;
     public float pickupHintHeight = 0.75f;
+    
+    [Header("Item Outline")]
+    public Color outlineColor = new Color(1f, 1f, 0f, 0.8f);
+    [Range(0.0f, 10.0f)]
+    public float outlineWidth = 2.0f;
 }
