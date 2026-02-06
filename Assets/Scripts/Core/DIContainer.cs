@@ -21,11 +21,7 @@ public class DIContainer : MonoBehaviour {
 
     public void Register<T>(T service) where T : class {
         Type type = typeof(T);
-        if (_services.ContainsKey(type)) {
-            _services[type] = service;
-        } else {
-            _services.Add(type, service);
-        }
+        _services[type] = service;
     }
 
     public T Get<T>() where T : class {

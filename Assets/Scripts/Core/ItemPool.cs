@@ -22,21 +22,10 @@ public class ItemPool : MonoBehaviour {
     }
 
     private void InitializePool() {
-        MainGameConfig config = _configProvider.GetConfig();
-        float itemScale = config.ItemScale;
-
         for (int i = 0; i < _poolSize; i++) {
-            GameObject itemObject = GameObject.CreatePrimitive(PrimitiveType.Cube);
-            itemObject.transform.localScale = Vector3.one * itemScale;
+            GameObject itemObject = CreateItemObject();
             itemObject.transform.SetParent(_poolParent);
             itemObject.SetActive(false);
-
-            Collider collider = itemObject.GetComponent<Collider>();
-            collider.isTrigger = true;
-
-            itemObject.AddComponent<CollectableItem>();
-            itemObject.AddComponent<ItemOutline>();
-
             _pool.Enqueue(itemObject);
         }
     }
@@ -46,21 +35,27 @@ public class ItemPool : MonoBehaviour {
         if (_pool.Count > 0) {
             itemObject = _pool.Dequeue();
         } else {
-            MainGameConfig config = _configProvider.GetConfig();
-            float itemScale = config.ItemScale;
-
-            itemObject = GameObject.CreatePrimitive(PrimitiveType.Cube);
-            itemObject.transform.localScale = Vector3.one * itemScale;
-
-            Collider collider = itemObject.GetComponent<Collider>();
-            collider.isTrigger = true;
-
-            itemObject.AddComponent<CollectableItem>();
-            itemObject.AddComponent<ItemOutline>();
+            itemObject = CreateItemObject();
         }
 
         itemObject.SetActive(true);
         itemObject.transform.SetParent(null);
+        return itemObject;
+    }
+
+    private GameObject CreateItemObject() {
+        MainGameConfig config = _configProvider.GetConfig();
+        float itemScale = config.ItemScale;
+
+        GameObject itemObject = GameObject.CreatePrimitive(PrimitiveType.Cube);
+        itemObject.transform.localScale = Vector3.one * itemScale;
+
+        Collider collider = itemObject.GetComponent<Collider>();
+        collider.isTrigger = true;
+
+        itemObject.AddComponent<CollectableItem>();
+        itemObject.AddComponent<ItemOutline>();
+
         return itemObject;
     }
 

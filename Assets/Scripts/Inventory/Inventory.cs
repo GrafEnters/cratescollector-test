@@ -1,16 +1,22 @@
 using System;
+using System.Collections.Generic;
 using UnityEngine;
 
 public class Inventory : MonoBehaviour {
     private InventorySlot[] _slots;
-    private ItemVisualFactory _itemFactory;
-    private ConfigProvider _configProvider;
+    private IItemFactory _itemFactory;
+    private IConfigProvider _configProvider;
 
     public event Action<int> OnSlotChanged;
 
     private void Awake() {
-        _configProvider = DIContainer.Instance.Get<IConfigProvider>() as ConfigProvider;
-        _itemFactory = DIContainer.Instance.Get<IItemFactory>() as ItemVisualFactory;
+        _configProvider = DIContainer.Instance.Get<IConfigProvider>();
+        _itemFactory = DIContainer.Instance.Get<IItemFactory>();
+
+        if (_configProvider == null || _itemFactory == null) {
+            Debug.LogError("Failed to get required services from DI container");
+            return;
+        }
 
         MainGameConfig config = _configProvider.GetConfig();
         int slotCount = config.InventorySlotCount;
@@ -148,11 +154,24 @@ public class Inventory : MonoBehaviour {
         }
 
         ItemData item = _slots[slotIndex].Item;
+        List<GameObject> createdItems = new List<GameObject>();
+
         for (int i = 0; i < quantity; i++) {
             GameObject droppedItem = _itemFactory.CreateItem(item, position);
             if (droppedItem == null) {
+                foreach (GameObject createdItem in createdItems) {
+                    if (createdItem != null) {
+                        CollectableItem collectable = createdItem.GetComponent<CollectableItem>();
+                        if (collectable != null) {
+                            collectable.Pickup();
+                        } else {
+                            Destroy(createdItem);
+                        }
+                    }
+                }
                 return false;
             }
+            createdItems.Add(droppedItem);
         }
 
         return RemoveItem(slotIndex, quantity);

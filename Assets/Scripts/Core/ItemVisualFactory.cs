@@ -21,16 +21,6 @@ public class ItemVisualFactory : MonoBehaviour, IItemFactory {
         itemObject.transform.position = position;
         itemObject.name = itemData.Name;
 
-        MeshRenderer renderer = itemObject.GetComponent<MeshRenderer>();
-        if (renderer.material == null) {
-            Material mat = new(Shader.Find("Standard")) {
-                color = itemData.Color
-            };
-            renderer.material = mat;
-        } else {
-            renderer.material.color = itemData.Color;
-        }
-
         CollectableItem collectable = itemObject.GetComponent<CollectableItem>();
         collectable.SetItemData(itemData);
 
@@ -45,12 +35,6 @@ public class ItemVisualFactory : MonoBehaviour, IItemFactory {
         float itemScale = config.ItemScale;
         itemObject.transform.localScale = Vector3.one * itemScale;
         itemObject.name = itemData.Name;
-
-        MeshRenderer renderer = itemObject.GetComponent<MeshRenderer>();
-        Material mat = new(Shader.Find("Standard")) {
-            color = itemData.Color
-        };
-        renderer.material = mat;
 
         Collider collider = itemObject.GetComponent<Collider>();
         collider.isTrigger = true;

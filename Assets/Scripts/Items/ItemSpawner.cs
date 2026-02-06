@@ -3,6 +3,7 @@ using UnityEngine;
 
 public class ItemSpawner : MonoBehaviour {
     private readonly List<ItemData> _itemsData = new();
+    private readonly List<CollectableItem> _activeItems = new();
     private ItemVisualFactory _itemFactory;
     private ConfigProvider _configProvider;
 
@@ -95,7 +96,13 @@ public class ItemSpawner : MonoBehaviour {
     }
 
     private void SpawnItem(ItemData itemData, Vector3 position) {
-        _itemFactory.CreateItem(itemData, position);
+        GameObject itemObject = _itemFactory.CreateItem(itemData, position);
+        if (itemObject != null) {
+            CollectableItem collectable = itemObject.GetComponent<CollectableItem>();
+            if (collectable != null) {
+                _activeItems.Add(collectable);
+            }
+        }
     }
 
     public void SpawnItemAtRandomPosition(ItemData itemData) {
@@ -117,12 +124,18 @@ public class ItemSpawner : MonoBehaviour {
     }
 
     private List<Vector3> GetAllItemPositions() {
+        UpdateActiveItemsCache();
         List<Vector3> positions = new();
-        CollectableItem[] items = FindObjectsByType<CollectableItem>(FindObjectsSortMode.None);
-        foreach (CollectableItem item in items) {
-            positions.Add(item.transform.position);
+        foreach (CollectableItem item in _activeItems) {
+            if (item != null && item.gameObject.activeInHierarchy) {
+                positions.Add(item.transform.position);
+            }
         }
 
         return positions;
+    }
+
+    private void UpdateActiveItemsCache() {
+        _activeItems.RemoveAll(item => item == null || !item.gameObject.activeInHierarchy);
     }
 }

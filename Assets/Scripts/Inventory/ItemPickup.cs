@@ -10,21 +10,21 @@ public class ItemPickup : MonoBehaviour {
 
     private Inventory _inventory;
     private InventoryFullNotification _notification;
-    private ItemDetector _itemDetector;
-    private ItemOutlineManager _outlineManager;
+    private IItemDetector _itemDetector;
+    private IItemOutlineManager _outlineManager;
     private ItemPickupHintUI _hintUI;
-    private ConfigProvider _configProvider;
+    private IConfigProvider _configProvider;
 
     private InputAction _interactAction;
     private CollectableItem _nearbyItem;
 
     private void Awake() {
-        _itemDetector = DIContainer.Instance.Get<IItemDetector>() as ItemDetector;
-        _outlineManager = DIContainer.Instance.Get<IItemOutlineManager>() as ItemOutlineManager;
+        _itemDetector = DIContainer.Instance.Get<IItemDetector>();
+        _outlineManager = DIContainer.Instance.Get<IItemOutlineManager>();
         _inventory = GetComponent<Inventory>();
         _hintUI = GetComponent<ItemPickupHintUI>();
         _notification = GetComponent<InventoryFullNotification>();
-        _configProvider = DIContainer.Instance.Get<IConfigProvider>() as ConfigProvider;
+        _configProvider = DIContainer.Instance.Get<IConfigProvider>();
 
         _interactAction = new InputAction("Interact", InputActionType.Button, "<Keyboard>/e");
     }
@@ -45,6 +45,10 @@ public class ItemPickup : MonoBehaviour {
     }
 
     private void CheckForNearbyItems() {
+        if (_configProvider == null || _itemDetector == null || _outlineManager == null) {
+            return;
+        }
+
         MainGameConfig config = _configProvider.GetConfig();
         float pickupDistance = config.PickupDistance;
 
@@ -92,6 +96,10 @@ public class ItemPickup : MonoBehaviour {
     }
 
     private void OnDrawGizmosSelected() {
+        if (_configProvider == null) {
+            return;
+        }
+
         MainGameConfig config = _configProvider.GetConfig();
         float pickupDistance = config.PickupDistance;
         Gizmos.color = Color.yellow;

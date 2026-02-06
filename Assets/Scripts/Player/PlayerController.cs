@@ -19,12 +19,7 @@ public class PlayerController : MonoBehaviour {
 
         _characterController.center = new Vector3(0, _characterController.height / 2f, 0);
 
-        if (_cameraTransform == null) {
-            Camera mainCamera = Camera.main;
-            if (mainCamera != null) {
-                _cameraTransform = mainCamera.transform;
-            }
-        }
+        _cameraTransform = GetCameraTransform();
 
         _inventoryStateProvider = DIContainer.Instance.Get<IInventoryStateProvider>() as InventoryStateProvider;
         _configProvider = DIContainer.Instance.Get<IConfigProvider>() as ConfigProvider;
@@ -92,23 +87,9 @@ public class PlayerController : MonoBehaviour {
             transform.position = pos;
         }
 
-        float playerRadius = _characterController.radius;
-        Vector3 originalPos = pos;
-
-        if (pos.x - playerRadius < _platformBounds.min.x) {
-            pos.x = _platformBounds.min.x + playerRadius;
-        } else if (pos.x + playerRadius > _platformBounds.max.x) {
-            pos.x = _platformBounds.max.x - playerRadius;
-        }
-
-        if (pos.z - playerRadius < _platformBounds.min.z) {
-            pos.z = _platformBounds.min.z + playerRadius;
-        } else if (pos.z + playerRadius > _platformBounds.max.z) {
-            pos.z = _platformBounds.max.z - playerRadius;
-        }
-
-        if (pos != originalPos) {
-            transform.position = pos;
+        Vector3 clampedPos = ClampPositionToBounds(pos);
+        if (clampedPos != pos) {
+            transform.position = clampedPos;
         }
     }
 
@@ -120,29 +101,12 @@ public class PlayerController : MonoBehaviour {
             }
         }
 
-        if (_cameraTransform == null) {
-            Camera mainCamera = Camera.main;
-            if (mainCamera != null) {
-                _cameraTransform = mainCamera.transform;
-            } else {
-                return;
-            }
+        Transform camera = GetCameraTransform();
+        if (camera == null) {
+            return;
         }
 
-        Vector3 moveDirection = Vector3.zero;
-
-        if (_moveInput.magnitude > 0.1f) {
-            Vector3 forward = _cameraTransform.forward;
-            Vector3 right = _cameraTransform.right;
-
-            forward.y = 0f;
-            right.y = 0f;
-
-            forward.Normalize();
-            right.Normalize();
-
-            moveDirection = (forward * _moveInput.y + right * _moveInput.x).normalized;
-        }
+        Vector3 moveDirection = CalculateMoveDirection(_moveInput, camera);
 
         if (moveDirection.magnitude > 0.1f) {
             float moveSpeed = config.PlayerMoveSpeed;
@@ -157,16 +121,12 @@ public class PlayerController : MonoBehaviour {
         Vector3 currentPosition = transform.position;
         float playerRadius = _characterController.radius;
         Vector3 nextPosition = currentPosition + _velocity * Time.deltaTime;
+        Vector3 clampedNextPosition = ClampPositionToBounds(nextPosition);
 
-        if (nextPosition.x - playerRadius < _platformBounds.min.x) {
-            _velocity.x = 0f;
-        } else if (nextPosition.x + playerRadius > _platformBounds.max.x) {
+        if (clampedNextPosition.x != nextPosition.x) {
             _velocity.x = 0f;
         }
-
-        if (nextPosition.z - playerRadius < _platformBounds.min.z) {
-            _velocity.z = 0f;
-        } else if (nextPosition.z + playerRadius > _platformBounds.max.z) {
+        if (clampedNextPosition.z != nextPosition.z) {
             _velocity.z = 0f;
         }
 
@@ -174,17 +134,13 @@ public class PlayerController : MonoBehaviour {
     }
 
     private void HandleRotation() {
-        if (_moveInput.magnitude > 0.1f && _cameraTransform != null) {
-            Vector3 forward = _cameraTransform.forward;
-            Vector3 right = _cameraTransform.right;
+        if (_moveInput.magnitude > 0.1f) {
+            Transform camera = GetCameraTransform();
+            if (camera == null) {
+                return;
+            }
 
-            forward.y = 0f;
-            right.y = 0f;
-
-            forward.Normalize();
-            right.Normalize();
-
-            Vector3 moveDirection = (forward * _moveInput.y + right * _moveInput.x).normalized;
+            Vector3 moveDirection = CalculateMoveDirection(_moveInput, camera);
 
             if (moveDirection.magnitude > 0.1f) {
                 MainGameConfig config = _configProvider.GetConfig();
@@ -193,5 +149,55 @@ public class PlayerController : MonoBehaviour {
                 transform.rotation = Quaternion.Slerp(transform.rotation, targetRotation, rotationSpeed * Time.deltaTime);
             }
         }
+    }
+
+    private Transform GetCameraTransform() {
+        if (_cameraTransform != null) {
+            return _cameraTransform;
+        }
+
+        Camera mainCamera = Camera.main;
+        if (mainCamera != null) {
+            _cameraTransform = mainCamera.transform;
+            return _cameraTransform;
+        }
+
+        return null;
+    }
+
+    private Vector3 CalculateMoveDirection(Vector2 input, Transform camera) {
+        if (input.magnitude <= 0.1f || camera == null) {
+            return Vector3.zero;
+        }
+
+        Vector3 forward = camera.forward;
+        Vector3 right = camera.right;
+
+        forward.y = 0f;
+        right.y = 0f;
+
+        forward.Normalize();
+        right.Normalize();
+
+        return (forward * input.y + right * input.x).normalized;
+    }
+
+    private Vector3 ClampPositionToBounds(Vector3 position) {
+        float playerRadius = _characterController.radius;
+        Vector3 clampedPos = position;
+
+        if (clampedPos.x - playerRadius < _platformBounds.min.x) {
+            clampedPos.x = _platformBounds.min.x + playerRadius;
+        } else if (clampedPos.x + playerRadius > _platformBounds.max.x) {
+            clampedPos.x = _platformBounds.max.x - playerRadius;
+        }
+
+        if (clampedPos.z - playerRadius < _platformBounds.min.z) {
+            clampedPos.z = _platformBounds.min.z + playerRadius;
+        } else if (clampedPos.z + playerRadius > _platformBounds.max.z) {
+            clampedPos.z = _platformBounds.max.z - playerRadius;
+        }
+
+        return clampedPos;
     }
 }

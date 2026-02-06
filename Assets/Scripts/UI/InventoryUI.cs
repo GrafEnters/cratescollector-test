@@ -290,27 +290,11 @@ public class InventoryUI : MonoBehaviour {
             return;
         }
 
-        Transform playerTransform = _inventory.transform;
-        if (playerTransform == null) {
-            GameObject player = GameObject.FindGameObjectWithTag("Player");
-            if (player == null) {
-                return;
-            }
-
-            playerTransform = player.transform;
+        Vector3 dropPosition = CalculateDropPosition();
+        if (dropPosition == Vector3.zero) {
+            return;
         }
 
-        Vector3 forwardDirection = Vector3.forward;
-        Camera mainCamera = Camera.main;
-        if (mainCamera != null) {
-            forwardDirection = mainCamera.transform.forward;
-            forwardDirection.y = 0f;
-            forwardDirection.Normalize();
-        } else {
-            forwardDirection = playerTransform.forward;
-        }
-
-        Vector3 dropPosition = playerTransform.position + forwardDirection * 2f + Vector3.up * 0.5f;
         _inventory.DropItem(slotIndex, dropPosition);
     }
 
@@ -324,11 +308,20 @@ public class InventoryUI : MonoBehaviour {
             return;
         }
 
+        Vector3 dropPosition = CalculateDropPosition();
+        if (dropPosition == Vector3.zero) {
+            return;
+        }
+
+        _inventory.DropItem(slotIndex, dropPosition, slot.Quantity);
+    }
+
+    private Vector3 CalculateDropPosition() {
         Transform playerTransform = _inventory.transform;
         if (playerTransform == null) {
             GameObject player = GameObject.FindGameObjectWithTag("Player");
             if (player == null) {
-                return;
+                return Vector3.zero;
             }
 
             playerTransform = player.transform;
@@ -344,8 +337,7 @@ public class InventoryUI : MonoBehaviour {
             forwardDirection = playerTransform.forward;
         }
 
-        Vector3 dropPosition = playerTransform.position + forwardDirection * 2f + Vector3.up * 0.5f;
-        _inventory.DropItem(slotIndex, dropPosition, slot.Quantity);
+        return playerTransform.position + forwardDirection * 2f + Vector3.up * 0.5f;
     }
 
     private void OnDestroy() {

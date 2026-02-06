@@ -3,6 +3,7 @@ using UnityEngine;
 public class CollectableItem : MonoBehaviour {
     private ItemData _itemData;
     private ItemPool _itemPool;
+    private Material _cachedMaterial;
 
     private void Awake() {
         _itemPool = DIContainer.Instance.Get<ItemPool>();
@@ -24,12 +25,12 @@ public class CollectableItem : MonoBehaviour {
 
         MeshRenderer meshRenderer = GetComponent<MeshRenderer>();
         if (meshRenderer != null) {
-            if (meshRenderer.material == null) {
-                Material mat = new(Shader.Find("Standard"));
-                meshRenderer.material = mat;
+            if (_cachedMaterial == null) {
+                _cachedMaterial = new Material(Shader.Find("Standard"));
+                meshRenderer.material = _cachedMaterial;
             }
 
-            meshRenderer.material.color = _itemData.Color;
+            _cachedMaterial.color = _itemData.Color;
         }
     }
 
@@ -37,7 +38,18 @@ public class CollectableItem : MonoBehaviour {
         if (_itemPool != null) {
             _itemPool.Return(gameObject);
         } else {
+            if (_cachedMaterial != null) {
+                Destroy(_cachedMaterial);
+                _cachedMaterial = null;
+            }
             Destroy(gameObject);
+        }
+    }
+
+    private void OnDestroy() {
+        if (_cachedMaterial != null) {
+            Destroy(_cachedMaterial);
+            _cachedMaterial = null;
         }
     }
 }
