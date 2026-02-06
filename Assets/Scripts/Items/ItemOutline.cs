@@ -1,45 +1,41 @@
 using UnityEngine;
 
-public class ItemOutline : MonoBehaviour
-{
+public class ItemOutline : MonoBehaviour {
     private bool isOutlined = false;
-    
-    public bool IsOutlined()
-    {
+
+    public bool IsOutlined() {
         return isOutlined;
     }
-    
-    public void ShowOutline()
-    {
-        if (isOutlined) return;
-        
+
+    public void ShowOutline() {
+        if (isOutlined) {
+            return;
+        }
+
         isOutlined = true;
         EnsureOutlineRenderer();
     }
-    
-    public void HideOutline()
-    {
-        if (!isOutlined) return;
-        
+
+    public void HideOutline() {
+        if (!isOutlined) {
+            return;
+        }
+
         isOutlined = false;
     }
-    
-    private void EnsureOutlineRenderer()
-    {
+
+    private void EnsureOutlineRenderer() {
         Camera mainCamera = Camera.main;
-        if (mainCamera == null)
-        {
+        if (mainCamera == null) {
             mainCamera = FindObjectOfType<Camera>();
         }
-        
-        if (mainCamera != null && mainCamera.GetComponent<OutlineRenderer>() == null)
-        {
+
+        if (mainCamera != null && mainCamera.GetComponent<OutlineRenderer>() == null) {
             mainCamera.gameObject.AddComponent<OutlineRenderer>();
         }
     }
-    
-    private void OnDestroy()
-    {
+
+    private void OnDestroy() {
         HideOutline();
     }
 }

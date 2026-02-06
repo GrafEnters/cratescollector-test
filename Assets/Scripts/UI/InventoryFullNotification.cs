@@ -2,59 +2,50 @@ using UnityEngine;
 using UnityEngine.UIElements;
 using System.Collections;
 
-public class InventoryFullNotification : MonoBehaviour
-{
+public class InventoryFullNotification : MonoBehaviour {
     private VisualElement notificationElement;
     private Label notificationLabel;
     private UIDocument uiDocument;
     private Coroutine hideCoroutine;
     private bool uiReady = false;
 
-    private void Start()
-    {
+    private void Start() {
         StartCoroutine(SetupUICoroutine());
     }
 
-    private IEnumerator SetupUICoroutine()
-    {
+    private IEnumerator SetupUICoroutine() {
         yield return null;
         yield return null;
 
         UIDocument[] allUIDocuments = FindObjectsOfType<UIDocument>();
-        foreach (UIDocument doc in allUIDocuments)
-        {
-            if (doc.rootVisualElement != null)
-            {
+        foreach (UIDocument doc in allUIDocuments) {
+            if (doc.rootVisualElement != null) {
                 uiDocument = doc;
                 break;
             }
         }
 
-        if (uiDocument == null)
-        {
-            GameObject uiObject = new GameObject("NotificationUI");
+        if (uiDocument == null) {
+            GameObject uiObject = new("NotificationUI");
             uiDocument = uiObject.AddComponent<UIDocument>();
             yield return null;
             yield return null;
         }
 
         int attempts = 0;
-        while (uiDocument.rootVisualElement == null && attempts < 10)
-        {
+        while (uiDocument.rootVisualElement == null && attempts < 10) {
             yield return null;
             attempts++;
         }
 
-        if (uiDocument.rootVisualElement == null)
-        {
+        if (uiDocument.rootVisualElement == null) {
             yield break;
         }
 
         VisualElement root = uiDocument.rootVisualElement;
 
         notificationElement = root.Q<VisualElement>("InventoryFullNotification");
-        if (notificationElement == null)
-        {
+        if (notificationElement == null) {
             notificationElement = new VisualElement();
             notificationElement.name = "InventoryFullNotification";
             notificationElement.style.position = Position.Absolute;
@@ -90,12 +81,9 @@ public class InventoryFullNotification : MonoBehaviour
 
             notificationElement.Add(notificationLabel);
             root.Add(notificationElement);
-        }
-        else
-        {
+        } else {
             notificationLabel = notificationElement.Q<Label>();
-            if (notificationLabel == null)
-            {
+            if (notificationLabel == null) {
                 notificationLabel = new Label("Инвентарь заполнен");
                 notificationLabel.style.fontSize = 28;
                 notificationLabel.style.color = new Color(1f, 0.8f, 0.8f, 1f);
@@ -109,21 +97,25 @@ public class InventoryFullNotification : MonoBehaviour
         uiReady = true;
     }
 
-    public void Show()
-    {
-        if (!uiReady || notificationElement == null || uiDocument == null || uiDocument.rootVisualElement == null) return;
+    public void Show() {
+        if (!uiReady || notificationElement == null || uiDocument == null || uiDocument.rootVisualElement == null) {
+            return;
+        }
 
-        if (hideCoroutine != null)
-        {
+        if (hideCoroutine != null) {
             StopCoroutine(hideCoroutine);
         }
 
         VisualElement root = uiDocument.rootVisualElement;
         float panelWidth = root.resolvedStyle.width;
-        if (panelWidth <= 0) panelWidth = Screen.width;
+        if (panelWidth <= 0) {
+            panelWidth = Screen.width;
+        }
 
         float elementWidth = notificationElement.resolvedStyle.width;
-        if (elementWidth == 0) elementWidth = 400;
+        if (elementWidth == 0) {
+            elementWidth = 400;
+        }
 
         float x = (panelWidth - elementWidth) * 0.5f;
         notificationElement.style.left = x;
@@ -136,13 +128,11 @@ public class InventoryFullNotification : MonoBehaviour
         hideCoroutine = StartCoroutine(HideAfterDelay());
     }
 
-    private IEnumerator FadeIn()
-    {
+    private IEnumerator FadeIn() {
         float duration = 0.2f;
         float elapsed = 0f;
 
-        while (elapsed < duration)
-        {
+        while (elapsed < duration) {
             elapsed += Time.deltaTime;
             float alpha = Mathf.Clamp01(elapsed / duration);
             notificationElement.style.opacity = alpha;
@@ -152,16 +142,14 @@ public class InventoryFullNotification : MonoBehaviour
         notificationElement.style.opacity = 1f;
     }
 
-    private IEnumerator HideAfterDelay()
-    {
+    private IEnumerator HideAfterDelay() {
         yield return new WaitForSeconds(2.5f);
 
         float duration = 0.3f;
         float elapsed = 0f;
         float startAlpha = notificationElement.resolvedStyle.opacity;
 
-        while (elapsed < duration)
-        {
+        while (elapsed < duration) {
             elapsed += Time.deltaTime;
             float alpha = Mathf.Lerp(startAlpha, 0f, elapsed / duration);
             notificationElement.style.opacity = alpha;

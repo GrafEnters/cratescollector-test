@@ -1,104 +1,85 @@
 using UnityEngine;
 using System.Collections.Generic;
 
-public class ItemSpawner : MonoBehaviour
-{
-    private List<ItemData> itemsData = new List<ItemData>();
+public class ItemSpawner : MonoBehaviour {
+    private List<ItemData> itemsData = new();
 
-    private void Start()
-    {
+    private void Start() {
         LoadItemsData();
         SpawnItems();
     }
 
-    private void LoadItemsData()
-    {
+    private void LoadItemsData() {
         TextAsset jsonFile = Resources.Load<TextAsset>("ItemsData");
-        if (jsonFile == null)
-        {
+        if (jsonFile == null) {
             Debug.LogError("ItemsData.json not found in Resources folder!");
             return;
         }
 
         ItemsDataContainer container = JsonUtility.FromJson<ItemsDataContainer>(jsonFile.text);
-        if (container == null || container.items == null)
-        {
+        if (container == null || container.items == null) {
             Debug.LogError("Failed to parse ItemsData.json!");
             return;
         }
 
-        foreach (var itemJson in container.items)
-        {
+        foreach (ItemDataJson itemJson in container.items) {
             itemsData.Add(itemJson.ToItemData());
         }
     }
 
-    private void SpawnItems()
-    {
-        if (itemsData.Count == 0)
-        {
+    private void SpawnItems() {
+        if (itemsData.Count == 0) {
             Debug.LogError("No items data loaded!");
             return;
         }
 
-        List<Vector3> spawnedPositions = new List<Vector3>();
+        List<Vector3> spawnedPositions = new();
         int spawnedCount = 0;
         MainGameConfig config = ConfigManager.Config;
         int itemCount = config != null ? config.itemSpawnerItemCount : 6;
 
-        while (spawnedCount < itemCount && spawnedCount < itemsData.Count)
-        {
+        while (spawnedCount < itemCount && spawnedCount < itemsData.Count) {
             Vector3 position = GetRandomPosition(spawnedPositions);
-            if (position != Vector3.zero)
-            {
+            if (position != Vector3.zero) {
                 ItemData itemData = itemsData[spawnedCount % itemsData.Count];
                 SpawnItem(itemData, position);
                 spawnedPositions.Add(position);
                 spawnedCount++;
-            }
-            else
-            {
+            } else {
                 break;
             }
         }
     }
 
-    private Vector3 GetRandomPosition(List<Vector3> existingPositions, Vector3? playerPosition = null)
-    {
+    private Vector3 GetRandomPosition(List<Vector3> existingPositions, Vector3? playerPosition = null) {
         MainGameConfig config = ConfigManager.Config;
         float spawnRadius = config != null ? config.itemSpawnerRadius : 10f;
         float minDistance = config != null ? config.itemSpawnerMinDistance : 2f;
         float minDistanceFromPlayer = config != null ? config.itemSpawnerMinDistanceFromPlayer : 3f;
         float spawnHeight = config != null ? config.itemSpawnerHeight : 0.5f;
         int attempts = config != null ? config.itemSpawnerMaxAttempts : 50;
-        
-        for (int i = 0; i < attempts; i++)
-        {
+
+        for (int i = 0; i < attempts; i++) {
             Vector2 randomCircle = Random.insideUnitCircle * spawnRadius;
             Vector3 position = transform.position + new Vector3(randomCircle.x, spawnHeight, randomCircle.y);
 
             bool tooClose = false;
-            foreach (Vector3 existingPos in existingPositions)
-            {
-                if (Vector3.Distance(position, existingPos) < minDistance)
-                {
+            foreach (Vector3 existingPos in existingPositions) {
+                if (Vector3.Distance(position, existingPos) < minDistance) {
                     tooClose = true;
                     break;
                 }
             }
 
-            if (!tooClose && playerPosition.HasValue)
-            {
+            if (!tooClose && playerPosition.HasValue) {
                 Vector3 playerPos = playerPosition.Value;
                 playerPos.y = position.y;
-                if (Vector3.Distance(position, playerPos) < minDistanceFromPlayer)
-                {
+                if (Vector3.Distance(position, playerPos) < minDistanceFromPlayer) {
                     tooClose = true;
                 }
             }
 
-            if (!tooClose)
-            {
+            if (!tooClose) {
                 return position;
             }
         }
@@ -106,8 +87,7 @@ public class ItemSpawner : MonoBehaviour
         return Vector3.zero;
     }
 
-    private void SpawnItem(ItemData itemData, Vector3 position)
-    {
+    private void SpawnItem(ItemData itemData, Vector3 position) {
         GameObject itemObject = GameObject.CreatePrimitive(PrimitiveType.Cube);
         itemObject.transform.position = position;
         MainGameConfig config = ConfigManager.Config;
@@ -116,7 +96,7 @@ public class ItemSpawner : MonoBehaviour
         itemObject.name = itemData.name;
 
         MeshRenderer renderer = itemObject.GetComponent<MeshRenderer>();
-        Material mat = new Material(Shader.Find("Standard"));
+        Material mat = new(Shader.Find("Standard"));
         mat.color = itemData.color;
         renderer.material = mat;
 
@@ -125,39 +105,35 @@ public class ItemSpawner : MonoBehaviour
 
         CollectableItem collectable = itemObject.AddComponent<CollectableItem>();
         collectable.SetItemData(itemData);
-        
+
         itemObject.AddComponent<ItemOutline>();
     }
 
-    public void SpawnItemAtRandomPosition(ItemData itemData)
-    {
+    public void SpawnItemAtRandomPosition(ItemData itemData) {
         List<Vector3> existingPositions = GetAllItemPositions();
         Vector3? playerPosition = GetPlayerPosition();
         Vector3 position = GetRandomPosition(existingPositions, playerPosition);
-        if (position != Vector3.zero)
-        {
+        if (position != Vector3.zero) {
             SpawnItem(itemData, position);
         }
     }
 
-    private Vector3? GetPlayerPosition()
-    {
+    private Vector3? GetPlayerPosition() {
         GameObject player = GameObject.FindWithTag("Player");
-        if (player != null)
-        {
+        if (player != null) {
             return player.transform.position;
         }
+
         return null;
     }
 
-    private List<Vector3> GetAllItemPositions()
-    {
-        List<Vector3> positions = new List<Vector3>();
+    private List<Vector3> GetAllItemPositions() {
+        List<Vector3> positions = new();
         CollectableItem[] items = FindObjectsOfType<CollectableItem>();
-        foreach (CollectableItem item in items)
-        {
+        foreach (CollectableItem item in items) {
             positions.Add(item.transform.position);
         }
+
         return positions;
     }
 }
