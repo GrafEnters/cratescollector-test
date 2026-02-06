@@ -2,64 +2,66 @@ using UnityEngine;
 using UnityEngine.UIElements;
 
 public class InventorySlotUI {
-    private VisualElement slotElement;
-    private VisualElement iconElement;
-    private Label quantityLabel;
-    private int slotIndex;
-    private InventoryUI inventoryUI;
+    private readonly VisualElement _slotElement;
+    private readonly VisualElement _iconElement;
+    private readonly Label _quantityLabel;
+    private readonly int _slotIndex;
+    private readonly InventoryUI _inventoryUI;
 
     public InventorySlotUI(VisualElement slotElement, int slotIndex, InventoryUI inventoryUI) {
-        this.slotElement = slotElement;
-        this.slotIndex = slotIndex;
-        this.inventoryUI = inventoryUI;
+        _slotElement = slotElement;
+        _slotIndex = slotIndex;
+        _inventoryUI = inventoryUI;
 
-        iconElement = new VisualElement();
-        iconElement.name = "SlotIcon";
-        iconElement.AddToClassList("slot-icon");
-        slotElement.Add(iconElement);
+        _iconElement = new VisualElement {
+            name = "SlotIcon"
+        };
+        _iconElement.AddToClassList("slot-icon");
+        slotElement.Add(_iconElement);
 
-        quantityLabel = new Label();
-        quantityLabel.name = "SlotQuantity";
-        quantityLabel.AddToClassList("slot-quantity");
-        slotElement.Add(quantityLabel);
+        _quantityLabel = new Label {
+            name = "SlotQuantity"
+        };
+        _quantityLabel.AddToClassList("slot-quantity");
+        slotElement.Add(_quantityLabel);
 
         slotElement.RegisterCallback<PointerDownEvent>(OnPointerDown);
         slotElement.RegisterCallback<PointerMoveEvent>(OnPointerMove);
         slotElement.RegisterCallback<PointerUpEvent>(OnPointerUp);
     }
 
-    private bool isDragging = false;
-    private Vector2 dragStartPosition;
-    private int capturedPointerId = -1;
+    private bool _isDragging;
+    private Vector2 _dragStartPosition;
+    private int _capturedPointerId = -1;
 
     private void OnPointerDown(PointerDownEvent evt) {
-        if (inventoryUI == null || slotElement == null) {
+        if (_inventoryUI == null || _slotElement == null) {
             return;
         }
 
         if (evt.button == 1) {
-            inventoryUI.DropItem(slotIndex);
+            _inventoryUI.DropItem(_slotIndex);
             return;
         }
 
-        Inventory inventory = inventoryUI.GetInventory();
+        Inventory inventory = _inventoryUI.GetInventory();
         if (inventory == null) {
             return;
         }
 
-        InventorySlot slot = inventory.GetSlot(slotIndex);
+        InventorySlot slot = inventory.GetSlot(_slotIndex);
         if (slot == null || slot.IsEmpty()) {
             return;
         }
 
-        isDragging = true;
-        dragStartPosition = evt.position;
-        capturedPointerId = evt.pointerId;
-        slotElement.AddToClassList("dragging");
-        slotElement.CapturePointer(evt.pointerId);
+        _isDragging = true;
+        _dragStartPosition = evt.position;
+        _capturedPointerId = evt.pointerId;
+        _slotElement.AddToClassList("dragging");
+        _slotElement.CapturePointer(evt.pointerId);
 
-        if (slotElement.panel != null) {
-            VisualElement root = slotElement.panel.visualTree;
+        if (_slotElement.panel != null) {
+            VisualElement root = _slotElement.panel.visualTree;
             if (root != null) {
                 root.RegisterCallback<PointerMoveEvent>(OnGlobalPointerMove);
                 root.RegisterCallback<PointerUpEvent>(OnGlobalPointerUp);
@@ -70,14 +72,14 @@ public class InventorySlotUI {
     }
 
     private void OnPointerMove(PointerMoveEvent evt) {
-        if (isDragging && evt.pointerId == capturedPointerId && slotElement != null) {
-            HandleDragMove(evt.position, slotElement.panel);
+        if (_isDragging && evt.pointerId == _capturedPointerId && _slotElement != null) {
+            HandleDragMove(evt.position, _slotElement.panel);
         }
     }
 
     private void OnGlobalPointerMove(PointerMoveEvent evt) {
-        if (isDragging && evt.pointerId == capturedPointerId && slotElement != null) {
-            HandleDragMove(evt.position, slotElement.panel);
+        if (_isDragging && evt.pointerId == _capturedPointerId && _slotElement != null) {
+            HandleDragMove(evt.position, _slotElement.panel);
         }
     }
 
@@ -86,49 +88,49 @@ public class InventorySlotUI {
             return;
         }
 
-        VisualElement elementUnderPointer = panel.Pick(position) as VisualElement;
+        VisualElement elementUnderPointer = panel.Pick(position);
         ClearDragOverStates();
 
         if (elementUnderPointer != null) {
             VisualElement slotElement = FindSlotElement(elementUnderPointer);
-            if (slotElement != null && slotElement != this.slotElement) {
+            if (slotElement != null && slotElement != _slotElement) {
                 slotElement.AddToClassList("drag-over");
             }
         }
     }
 
     private void OnPointerUp(PointerUpEvent evt) {
-        if (isDragging && evt.pointerId == capturedPointerId && slotElement != null) {
-            HandleDragEnd(evt.position, slotElement.panel);
+        if (_isDragging && evt.pointerId == _capturedPointerId && _slotElement != null) {
+            HandleDragEnd(evt.position, _slotElement.panel);
         }
     }
 
     private void OnGlobalPointerUp(PointerUpEvent evt) {
-        if (isDragging && evt.pointerId == capturedPointerId && slotElement != null) {
-            HandleDragEnd(evt.position, slotElement.panel);
+        if (_isDragging && evt.pointerId == _capturedPointerId && _slotElement != null) {
+            HandleDragEnd(evt.position, _slotElement.panel);
         }
     }
 
     private void HandleDragEnd(Vector2 position, IPanel panel) {
-        if (panel == null || inventoryUI == null) {
+        if (panel == null || _inventoryUI == null) {
             ClearDragState();
             return;
         }
 
-        VisualElement targetElement = panel.Pick(position) as VisualElement;
+        VisualElement targetElement = panel.Pick(position);
         VisualElement targetSlot = FindSlotElement(targetElement);
 
         int targetSlotIndex = -1;
         if (targetSlot != null) {
-            targetSlotIndex = inventoryUI.GetSlotIndexFromElement(targetSlot);
+            targetSlotIndex = _inventoryUI.GetSlotIndexFromElement(targetSlot);
         }
 
-        Inventory inventory = inventoryUI.GetInventory();
+        Inventory inventory = _inventoryUI.GetInventory();
         if (inventory != null) {
-            if (targetSlotIndex >= 0 && targetSlotIndex != slotIndex) {
-                inventory.MoveItem(slotIndex, targetSlotIndex);
+            if (targetSlotIndex >= 0 && targetSlotIndex != _slotIndex) {
+                inventory.MoveItem(_slotIndex, targetSlotIndex);
             } else if (targetSlotIndex < 0) {
-                inventoryUI.DropItem(slotIndex);
+                _inventoryUI.DropItem(_slotIndex);
             }
         }
 
@@ -153,7 +155,7 @@ public class InventorySlotUI {
     }
 
     private void ClearDragOverStates() {
-        if (slotElement == null) {
+        if (_slotElement == null) {
             return;
         }
 
@@ -164,11 +166,11 @@ public class InventorySlotUI {
     }
 
     private VisualElement FindInventoryGrid() {
-        if (slotElement == null) {
+        if (_slotElement == null) {
             return null;
         }
 
-        VisualElement current = slotElement;
+        VisualElement current = _slotElement;
         while (current != null) {
             if (current.ClassListContains("inventory-grid")) {
                 return current;
@@ -181,49 +183,49 @@ public class InventorySlotUI {
     }
 
     private void ClearDragState() {
-        isDragging = false;
+        _isDragging = false;
 
-        if (slotElement != null) {
-            slotElement.RemoveFromClassList("dragging");
+        if (_slotElement != null) {
+            _slotElement.RemoveFromClassList("dragging");
 
-            if (slotElement.panel != null) {
-                VisualElement root = slotElement.panel.visualTree;
+            if (_slotElement.panel != null) {
+                VisualElement root = _slotElement.panel.visualTree;
                 if (root != null) {
                     root.UnregisterCallback<PointerMoveEvent>(OnGlobalPointerMove);
                     root.UnregisterCallback<PointerUpEvent>(OnGlobalPointerUp);
                 }
             }
 
-            if (capturedPointerId >= 0 && slotElement.panel != null) {
+            if (_capturedPointerId >= 0 && _slotElement.panel != null) {
                 try {
-                    slotElement.ReleasePointer(capturedPointerId);
+                    _slotElement.ReleasePointer(_capturedPointerId);
                 } catch { }
             }
         }
 
-        capturedPointerId = -1;
+        _capturedPointerId = -1;
         ClearDragOverStates();
     }
 
     public void UpdateSlot(InventorySlot slot) {
-        if (slotElement == null || iconElement == null || quantityLabel == null) {
+        if (_slotElement == null || _iconElement == null || _quantityLabel == null) {
             return;
         }
 
         if (slot == null || slot.IsEmpty()) {
-            slotElement.AddToClassList("empty");
-            iconElement.style.display = DisplayStyle.None;
-            quantityLabel.text = "";
+            _slotElement.AddToClassList("empty");
+            _iconElement.style.display = DisplayStyle.None;
+            _quantityLabel.text = "";
         } else {
-            slotElement.RemoveFromClassList("empty");
-            iconElement.style.display = DisplayStyle.Flex;
-            iconElement.style.backgroundColor = slot.item.color;
+            _slotElement.RemoveFromClassList("empty");
+            _iconElement.style.display = DisplayStyle.Flex;
+            _iconElement.style.backgroundColor = slot.Item.Color;
 
-            if (slot.item.stackable && slot.quantity > 1) {
-                quantityLabel.text = slot.quantity.ToString();
-                quantityLabel.style.display = DisplayStyle.Flex;
+            if (slot.Item.Stackable && slot.Quantity > 1) {
+                _quantityLabel.text = slot.Quantity.ToString();
+                _quantityLabel.style.display = DisplayStyle.Flex;
             } else {
-                quantityLabel.style.display = DisplayStyle.None;
+                _quantityLabel.style.display = DisplayStyle.None;
             }
         }
     }

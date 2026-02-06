@@ -1,8 +1,8 @@
-using UnityEngine;
 using System.Collections.Generic;
+using UnityEngine;
 
 public class ItemSpawner : MonoBehaviour {
-    private List<ItemData> itemsData = new();
+    private readonly List<ItemData> _itemsData = new();
 
     private void Start() {
         LoadItemsData();
@@ -17,18 +17,18 @@ public class ItemSpawner : MonoBehaviour {
         }
 
         ItemsDataContainer container = JsonUtility.FromJson<ItemsDataContainer>(jsonFile.text);
-        if (container == null || container.items == null) {
+        if (container == null || container.Items == null) {
             Debug.LogError("Failed to parse ItemsData.json!");
             return;
         }
 
-        foreach (ItemDataJson itemJson in container.items) {
-            itemsData.Add(itemJson.ToItemData());
+        foreach (ItemDataJson itemJson in container.Items) {
+            _itemsData.Add(itemJson.ToItemData());
         }
     }
 
     private void SpawnItems() {
-        if (itemsData.Count == 0) {
+        if (_itemsData.Count == 0) {
             Debug.LogError("No items data loaded!");
             return;
         }
@@ -36,12 +36,12 @@ public class ItemSpawner : MonoBehaviour {
         List<Vector3> spawnedPositions = new();
         int spawnedCount = 0;
         MainGameConfig config = ConfigManager.Config;
-        int itemCount = config != null ? config.itemSpawnerItemCount : 6;
+        int itemCount = config != null ? config.ItemSpawnerItemCount : 6;
 
-        while (spawnedCount < itemCount && spawnedCount < itemsData.Count) {
+        while (spawnedCount < itemCount && spawnedCount < _itemsData.Count) {
             Vector3 position = GetRandomPosition(spawnedPositions);
             if (position != Vector3.zero) {
-                ItemData itemData = itemsData[spawnedCount % itemsData.Count];
+                ItemData itemData = _itemsData[spawnedCount % _itemsData.Count];
                 SpawnItem(itemData, position);
                 spawnedPositions.Add(position);
                 spawnedCount++;
@@ -53,11 +53,11 @@ public class ItemSpawner : MonoBehaviour {
 
     private Vector3 GetRandomPosition(List<Vector3> existingPositions, Vector3? playerPosition = null) {
         MainGameConfig config = ConfigManager.Config;
-        float spawnRadius = config != null ? config.itemSpawnerRadius : 10f;
-        float minDistance = config != null ? config.itemSpawnerMinDistance : 2f;
-        float minDistanceFromPlayer = config != null ? config.itemSpawnerMinDistanceFromPlayer : 3f;
-        float spawnHeight = config != null ? config.itemSpawnerHeight : 0.5f;
-        int attempts = config != null ? config.itemSpawnerMaxAttempts : 50;
+        float spawnRadius = config != null ? config.ItemSpawnerRadius : 10f;
+        float minDistance = config != null ? config.ItemSpawnerMinDistance : 2f;
+        float minDistanceFromPlayer = config != null ? config.ItemSpawnerMinDistanceFromPlayer : 3f;
+        float spawnHeight = config != null ? config.ItemSpawnerHeight : 0.5f;
+        int attempts = config != null ? config.ItemSpawnerMaxAttempts : 50;
 
         for (int i = 0; i < attempts; i++) {
             Vector2 randomCircle = Random.insideUnitCircle * spawnRadius;
@@ -91,13 +91,14 @@ public class ItemSpawner : MonoBehaviour {
         GameObject itemObject = GameObject.CreatePrimitive(PrimitiveType.Cube);
         itemObject.transform.position = position;
         MainGameConfig config = ConfigManager.Config;
-        float itemScale = config != null ? config.itemScale : 0.5f;
+        float itemScale = config != null ? config.ItemScale : 0.5f;
         itemObject.transform.localScale = Vector3.one * itemScale;
-        itemObject.name = itemData.name;
+        itemObject.name = itemData.Name;
 
         MeshRenderer renderer = itemObject.GetComponent<MeshRenderer>();
-        Material mat = new(Shader.Find("Standard"));
-        mat.color = itemData.color;
+        Material mat = new(Shader.Find("Standard")) {
+            color = itemData.Color
+        };
         renderer.material = mat;
 
         Collider collider = itemObject.GetComponent<Collider>();

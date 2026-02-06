@@ -5,39 +5,39 @@ public class MainGameConfig : ScriptableObject {
     public bool IsInventoryBlockingView = true;
 
     [Header("Player")]
-    public float playerMoveSpeed = 5f;
+    public float PlayerMoveSpeed = 5f;
 
-    public float playerRotationSpeed = 10f;
+    public float PlayerRotationSpeed = 10f;
 
     [Header("Inventory")]
-    public int inventorySlotCount = 12;
+    public int InventorySlotCount = 12;
 
     [Header("Item Spawner")]
-    public int itemSpawnerItemCount = 6;
+    public int ItemSpawnerItemCount = 6;
 
-    public float itemSpawnerRadius = 10f;
-    public float itemSpawnerMinDistance = 2f;
-    public float itemSpawnerMinDistanceFromPlayer = 3f;
-    public float itemSpawnerHeight = 0.5f;
-    public float itemScale = 0.5f;
-    public int itemSpawnerMaxAttempts = 50;
+    public float ItemSpawnerRadius = 10f;
+    public float ItemSpawnerMinDistance = 2f;
+    public float ItemSpawnerMinDistanceFromPlayer = 3f;
+    public float ItemSpawnerHeight = 0.5f;
+    public float ItemScale = 0.5f;
+    public int ItemSpawnerMaxAttempts = 50;
 
     [Header("Camera")]
-    public float cameraDistance = 5f;
+    public float CameraDistance = 5f;
 
-    public float cameraHeight = 2f;
-    public float cameraRotationSpeed = 2f;
-    public float cameraMinVerticalAngle = -30f;
-    public float cameraMaxVerticalAngle = 60f;
+    public float CameraHeight = 2f;
+    public float CameraRotationSpeed = 2f;
+    public float CameraMinVerticalAngle = -30f;
+    public float CameraMaxVerticalAngle = 60f;
 
     [Header("Item Pickup")]
-    public float pickupDistance = 2f;
+    public float PickupDistance = 2f;
 
-    public float pickupHintHeight = 0.75f;
+    public float PickupHintHeight = 0.75f;
 
     [Header("Item Outline")]
-    public Color outlineColor = new(1f, 1f, 0f, 0.8f);
+    public Color OutlineColor = new(1f, 1f, 0f, 0.8f);
 
     [Range(0.0f, 10.0f)]
-    public float outlineWidth = 2.0f;
+    public float OutlineWidth = 2.0f;
 }

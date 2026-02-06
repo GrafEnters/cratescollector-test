@@ -1,27 +1,27 @@
 using UnityEngine;
 
 public class ItemOutline : MonoBehaviour {
-    private bool isOutlined = false;
+    private bool _isOutlined;
 
     public bool IsOutlined() {
-        return isOutlined;
+        return _isOutlined;
     }
 
     public void ShowOutline() {
-        if (isOutlined) {
+        if (_isOutlined) {
             return;
         }
 
-        isOutlined = true;
+        _isOutlined = true;
         EnsureOutlineRenderer();
     }
 
     public void HideOutline() {
-        if (!isOutlined) {
+        if (!_isOutlined) {
             return;
         }
 
-        isOutlined = false;
+        _isOutlined = false;
     }
 
     private void EnsureOutlineRenderer() {

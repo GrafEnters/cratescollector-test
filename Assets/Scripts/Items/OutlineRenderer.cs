@@ -2,26 +2,26 @@ using UnityEngine;
 using UnityEngine.Rendering;
 
 public class OutlineRenderer : MonoBehaviour {
-    private Camera mainCamera;
-    private RenderTexture outlineTexture;
-    private Material outlineMaterial;
-    private Material edgeDetectionMaterial;
-    private CommandBuffer commandBuffer;
+    private Camera _mainCamera;
+    private RenderTexture _outlineTexture;
+    private Material _outlineMaterial;
+    private Material _edgeDetectionMaterial;
+    private CommandBuffer _commandBuffer;
 
     private void Start() {
-        mainCamera = GetComponent<Camera>();
-        if (mainCamera == null) {
-            mainCamera = Camera.main;
+        _mainCamera = GetComponent<Camera>();
+        if (_mainCamera == null) {
+            _mainCamera = Camera.main;
         }
 
         Shader outlineShader = Shader.Find("Custom/Outline");
         if (outlineShader != null) {
-            outlineMaterial = new Material(outlineShader);
+            _outlineMaterial = new Material(outlineShader);
         }
 
         Shader edgeShader = Shader.Find("Custom/OutlinePostProcess");
         if (edgeShader != null) {
-            edgeDetectionMaterial = new Material(edgeShader);
+            _edgeDetectionMaterial = new Material(edgeShader);
             UpdateOutlineProperties();
         }
 
@@ -29,61 +29,62 @@ public class OutlineRenderer : MonoBehaviour {
     }
 
     private void SetupCommandBuffer() {
-        if (commandBuffer != null) {
-            mainCamera.RemoveCommandBuffer(CameraEvent.BeforeImageEffects, commandBuffer);
-            commandBuffer.Release();
+        if (_commandBuffer != null) {
+            _mainCamera.RemoveCommandBuffer(CameraEvent.BeforeImageEffects, _commandBuffer);
+            _commandBuffer.Release();
         }
 
-        commandBuffer = new CommandBuffer();
-        commandBuffer.name = "Outline Render";
+        _commandBuffer = new CommandBuffer();
+        _commandBuffer.name = "Outline Render";
 
-        if (outlineTexture != null) {
-            outlineTexture.Release();
+        if (_outlineTexture != null) {
+            _outlineTexture.Release();
         }
 
-        outlineTexture = new RenderTexture(Screen.width, Screen.height, 0, RenderTextureFormat.ARGB32);
-        outlineTexture.name = "OutlineTexture";
+        _outlineTexture = new RenderTexture(Screen.width, Screen.height, 0, RenderTextureFormat.ARGB32) {
+            name = "OutlineTexture"
+        };
 
-        commandBuffer.SetRenderTarget(outlineTexture);
-        commandBuffer.ClearRenderTarget(true, true, Color.clear);
+        _commandBuffer.SetRenderTarget(_outlineTexture);
+        _commandBuffer.ClearRenderTarget(true, true, Color.clear);
 
-        mainCamera.AddCommandBuffer(CameraEvent.BeforeImageEffects, commandBuffer);
+        _mainCamera.AddCommandBuffer(CameraEvent.BeforeImageEffects, _commandBuffer);
     }
 
     private void UpdateCommandBuffer() {
-        if (commandBuffer == null || outlineMaterial == null) {
+        if (_commandBuffer == null || _outlineMaterial == null) {
             return;
         }
 
-        commandBuffer.Clear();
-        commandBuffer.SetRenderTarget(outlineTexture);
-        commandBuffer.ClearRenderTarget(true, true, Color.clear);
+        _commandBuffer.Clear();
+        _commandBuffer.SetRenderTarget(_outlineTexture);
+        _commandBuffer.ClearRenderTarget(true, true, Color.clear);
 
         ItemOutline[] outlinedItems = FindObjectsOfType<ItemOutline>();
         foreach (ItemOutline item in outlinedItems) {
             if (item.IsOutlined()) {
                 MeshFilter filter = item.GetComponent<MeshFilter>();
                 if (filter != null) {
-                    commandBuffer.DrawMesh(filter.sharedMesh, item.transform.localToWorldMatrix, outlineMaterial, 0, 0);
+                    _commandBuffer.DrawMesh(filter.sharedMesh, item.transform.localToWorldMatrix, _outlineMaterial, 0, 0);
                 }
             }
         }
     }
 
     private void UpdateOutlineProperties() {
-        if (edgeDetectionMaterial == null) {
+        if (_edgeDetectionMaterial == null) {
             return;
         }
 
         MainGameConfig config = ConfigManager.Config;
         if (config != null) {
-            edgeDetectionMaterial.SetColor("_OutlineColor", config.outlineColor);
-            edgeDetectionMaterial.SetFloat("_OutlineWidth", config.outlineWidth);
+            _edgeDetectionMaterial.SetColor("_OutlineColor", config.OutlineColor);
+            _edgeDetectionMaterial.SetFloat("_OutlineWidth", config.OutlineWidth);
         }
     }
 
     private void OnPreRender() {
-        if (outlineTexture == null || outlineTexture.width != Screen.width || outlineTexture.height != Screen.height) {
+        if (_outlineTexture == null || _outlineTexture.width != Screen.width || _outlineTexture.height != Screen.height) {
             SetupCommandBuffer();
         }
 
@@ -91,28 +92,28 @@ public class OutlineRenderer : MonoBehaviour {
     }
 
     private void OnRenderImage(RenderTexture source, RenderTexture destination) {
-        if (edgeDetectionMaterial == null || outlineTexture == null) {
+        if (_edgeDetectionMaterial == null || _outlineTexture == null) {
             Graphics.Blit(source, destination);
             return;
         }
 
         UpdateOutlineProperties();
-        edgeDetectionMaterial.SetTexture("_OutlineTex", outlineTexture);
-        Graphics.Blit(source, destination, edgeDetectionMaterial);
+        _edgeDetectionMaterial.SetTexture("_OutlineTex", _outlineTexture);
+        Graphics.Blit(source, destination, _edgeDetectionMaterial);
     }
 
     private void OnDestroy() {
-        if (commandBuffer != null) {
-            if (mainCamera != null) {
-                mainCamera.RemoveCommandBuffer(CameraEvent.BeforeImageEffects, commandBuffer);
+        if (_commandBuffer != null) {
+            if (_mainCamera != null) {
+                _mainCamera.RemoveCommandBuffer(CameraEvent.BeforeImageEffects, _commandBuffer);
             }
 
-            commandBuffer.Release();
+            _commandBuffer.Release();
         }
 
-        if (outlineTexture != null) {
-            outlineTexture.Release();
-            Destroy(outlineTexture);
+        if (_outlineTexture != null) {
+            _outlineTexture.Release();
+            Destroy(_outlineTexture);
         }
     }
 }

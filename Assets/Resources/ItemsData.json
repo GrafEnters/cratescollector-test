@@ -1,46 +1,46 @@
 {
-  "items": [
+  "Items": [
     {
-      "id": 1,
-      "name": "Red Cube",
-      "color": {"r": 1, "g": 0, "b": 0, "a": 1},
-      "stackable": true,
-      "maxStack": 10
+      "ID": 1,
+      "Name": "Red Cube",
+      "Color": {"R": 1, "G": 0, "B": 0, "A": 1},
+      "Stackable": true,
+      "MaxStack": 10
     },
     {
-      "id": 2,
-      "name": "Blue Cube",
-      "color": {"r": 0, "g": 0, "b": 1, "a": 1},
-      "stackable": true,
-      "maxStack": 5
+      "ID": 2,
+      "Name": "Blue Cube",
+      "Color": {"R": 0, "G": 0, "B": 1, "A": 1},
+      "Stackable": true,
+      "MaxStack": 5
     },
     {
-      "id": 3,
-      "name": "Green Cube",
-      "color": {"r": 0, "g": 1, "b": 0, "a": 1},
-      "stackable": false,
-      "maxStack": 1
+      "ID": 3,
+      "Name": "Green Cube",
+      "Color": {"R": 0, "G": 1, "B": 0, "A": 1},
+      "Stackable": false,
+      "MaxStack": 1
     },
     {
-      "id": 4,
-      "name": "Yellow Cube",
-      "color": {"r": 1, "g": 1, "b": 0, "a": 1},
-      "stackable": true,
-      "maxStack": 20
+      "ID": 4,
+      "Name": "Yellow Cube",
+      "Color": {"R": 1, "G": 1, "B": 0, "A": 1},
+      "Stackable": true,
+      "MaxStack": 20
     },
     {
-      "id": 5,
-      "name": "Purple Cube",
-      "color": {"r": 0.5, "g": 0, "b": 0.5, "a": 1},
-      "stackable": false,
-      "maxStack": 1
+      "ID": 5,
+      "Name": "Purple Cube",
+      "Color": {"R": 0.5, "G": 0, "B": 0.5, "A": 1},
+      "Stackable": false,
+      "MaxStack": 1
     },
     {
-      "id": 6,
-      "name": "Orange Cube",
-      "color": {"r": 1, "g": 0.5, "b": 0, "a": 1},
-      "stackable": true,
-      "maxStack": 15
+      "ID": 6,
+      "Name": "Orange Cube",
+      "Color": {"R": 1, "G": 0.5, "B": 0, "A": 1},
+      "Stackable": true,
+      "MaxStack": 15
     }
   ]
 }

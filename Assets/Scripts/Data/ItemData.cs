@@ -1,48 +1,49 @@
+using System;
 using UnityEngine;
 
-[System.Serializable]
+[Serializable]
 public class ItemData {
-    public int id;
-    public string name;
-    public Color color;
-    public bool stackable;
-    public int maxStack;
+    public int ID;
+    public string Name;
+    public Color Color;
+    public bool Stackable;
+    public int MaxStack;
 
     public ItemData(int id, string name, Color color, bool stackable, int maxStack) {
-        this.id = id;
-        this.name = name;
-        this.color = color;
-        this.stackable = stackable;
-        this.maxStack = maxStack;
+        ID = id;
+        Name = name;
+        Color = color;
+        Stackable = stackable;
+        MaxStack = maxStack;
     }
 }
 
-[System.Serializable]
+[Serializable]
 public class ItemDataColor {
-    public float r;
-    public float g;
-    public float b;
-    public float a = 1f;
+    public float R;
+    public float G;
+    public float B;
+    public float A = 1f;
 
     public Color ToColor() {
-        return new Color(r, g, b, a);
+        return new Color(R, G, B, A);
     }
 }
 
-[System.Serializable]
+[Serializable]
 public class ItemDataJson {
-    public int id;
-    public string name;
-    public ItemDataColor color;
-    public bool stackable;
-    public int maxStack;
+    public int ID;
+    public string Name;
+    public ItemDataColor Color;
+    public bool Stackable;
+    public int MaxStack;
 
     public ItemData ToItemData() {
-        return new ItemData(id, name, color.ToColor(), stackable, maxStack);
+        return new ItemData(ID, Name, Color.ToColor(), Stackable, MaxStack);
     }
 }
 
-[System.Serializable]
+[Serializable]
 public class ItemsDataContainer {
-    public ItemDataJson[] items;
+    public ItemDataJson[] Items;
 }

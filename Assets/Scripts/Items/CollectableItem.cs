@@ -1,30 +1,30 @@
 using UnityEngine;
 
 public class CollectableItem : MonoBehaviour {
-    private ItemData itemData;
+    private ItemData _itemData;
 
     public ItemData GetItemData() {
-        return itemData;
+        return _itemData;
     }
 
     public void SetItemData(ItemData data) {
-        itemData = data;
+        _itemData = data;
         UpdateVisuals();
     }
 
     private void UpdateVisuals() {
-        if (itemData == null) {
+        if (_itemData == null) {
             return;
         }
 
-        MeshRenderer renderer = GetComponent<MeshRenderer>();
-        if (renderer != null) {
-            if (renderer.material == null) {
+        MeshRenderer meshRenderer = GetComponent<MeshRenderer>();
+        if (meshRenderer != null) {
+            if (meshRenderer.material == null) {
                 Material mat = new(Shader.Find("Standard"));
-                renderer.material = mat;
+                meshRenderer.material = mat;
             }
 
-            renderer.material.color = itemData.color;
+            meshRenderer.material.color = _itemData.Color;
         }
     }
 

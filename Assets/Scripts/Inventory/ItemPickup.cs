@@ -1,38 +1,38 @@
+using System.Collections;
 using UnityEngine;
 using UnityEngine.InputSystem;
 using UnityEngine.UIElements;
-using System.Collections;
 
 public class ItemPickup : MonoBehaviour {
     [SerializeField]
-    private LayerMask itemLayer = -1;
+    private LayerMask _itemLayer = -1;
 
-    private InputAction interactAction;
-    private CollectableItem nearbyItem;
-    private VisualElement hintElement;
-    private Label hintLabel;
-    private Inventory inventory;
-    private UIDocument uiDocument;
-    private ItemSpawner itemSpawner;
-    private InventoryFullNotification notification;
-    private bool uiReady = false;
+    private InputAction _interactAction;
+    private CollectableItem _nearbyItem;
+    private VisualElement _hintElement;
+    private Label _hintLabel;
+    private Inventory _inventory;
+    private UIDocument _uiDocument;
+    private ItemSpawner _itemSpawner;
+    private InventoryFullNotification _notification;
+    private bool _uiReady;
 
     private void Awake() {
-        inventory = GetComponent<Inventory>();
-        if (inventory == null) {
-            inventory = FindObjectOfType<Inventory>();
+        _inventory = GetComponent<Inventory>();
+        if (_inventory == null) {
+            _inventory = FindObjectOfType<Inventory>();
         }
 
-        itemSpawner = FindObjectOfType<ItemSpawner>();
+        _itemSpawner = FindObjectOfType<ItemSpawner>();
 
-        notification = GetComponent<InventoryFullNotification>();
-        if (notification == null) {
+        _notification = GetComponent<InventoryFullNotification>();
+        if (_notification == null) {
             GameObject notificationObject = new("InventoryFullNotification");
             notificationObject.transform.SetParent(transform);
-            notification = notificationObject.AddComponent<InventoryFullNotification>();
+            _notification = notificationObject.AddComponent<InventoryFullNotification>();
         }
 
-        interactAction = new InputAction("Interact", InputActionType.Button, "<Keyboard>/e");
+        _interactAction = new InputAction("Interact", InputActionType.Button, "<Keyboard>/e");
     }
 
     private void Start() {
@@ -46,93 +46,102 @@ public class ItemPickup : MonoBehaviour {
         UIDocument[] allUIDocuments = FindObjectsOfType<UIDocument>();
         foreach (UIDocument doc in allUIDocuments) {
             if (doc.rootVisualElement != null) {
-                uiDocument = doc;
+                _uiDocument = doc;
                 break;
             }
         }
 
-        if (uiDocument == null) {
+        if (_uiDocument == null) {
             GameObject uiObject = new("PickupHintUI");
-            uiDocument = uiObject.AddComponent<UIDocument>();
+            _uiDocument = uiObject.AddComponent<UIDocument>();
             yield return null;
             yield return null;
         }
 
         int attempts = 0;
-        while (uiDocument.rootVisualElement == null && attempts < 10) {
+        while (_uiDocument.rootVisualElement == null && attempts < 10) {
             yield return null;
             attempts++;
         }
 
-        if (uiDocument.rootVisualElement == null) {
+        if (_uiDocument.rootVisualElement == null) {
             yield break;
         }
 
-        VisualElement root = uiDocument.rootVisualElement;
+        VisualElement root = _uiDocument.rootVisualElement;
 
-        hintElement = root.Q<VisualElement>("PickupHint");
-        if (hintElement == null) {
-            hintElement = new VisualElement();
-            hintElement.name = "PickupHint";
-            hintElement.style.position = Position.Absolute;
-            hintElement.style.width = 200;
-            hintElement.style.height = 50;
-            hintElement.style.backgroundColor = new Color(0, 0, 0, 0.9f);
-            hintElement.style.display = DisplayStyle.None;
-            hintElement.style.borderTopWidth = 2;
-            hintElement.style.borderBottomWidth = 2;
-            hintElement.style.borderLeftWidth = 2;
-            hintElement.style.borderRightWidth = 2;
-            hintElement.style.borderTopColor = new Color(1, 1, 1, 0.8f);
-            hintElement.style.borderBottomColor = new Color(1, 1, 1, 0.8f);
-            hintElement.style.borderLeftColor = new Color(1, 1, 1, 0.8f);
-            hintElement.style.borderRightColor = new Color(1, 1, 1, 0.8f);
-            hintElement.style.borderTopLeftRadius = 5;
-            hintElement.style.borderTopRightRadius = 5;
-            hintElement.style.borderBottomLeftRadius = 5;
-            hintElement.style.borderBottomRightRadius = 5;
+        _hintElement = root.Q<VisualElement>("PickupHint");
+        if (_hintElement == null) {
+            _hintElement = new VisualElement {
+                name = "PickupHint",
+                style = {
+                    position = Position.Absolute,
+                    width = 200,
+                    height = 50,
+                    backgroundColor = new Color(0, 0, 0, 0.9f),
+                    display = DisplayStyle.None,
+                    borderTopWidth = 2,
+                    borderBottomWidth = 2,
+                    borderLeftWidth = 2,
+                    borderRightWidth = 2,
+                    borderTopColor = new Color(1, 1, 1, 0.8f),
+                    borderBottomColor = new Color(1, 1, 1, 0.8f),
+                    borderLeftColor = new Color(1, 1, 1, 0.8f),
+                    borderRightColor = new Color(1, 1, 1, 0.8f),
+                    borderTopLeftRadius = 5,
+                    borderTopRightRadius = 5,
+                    borderBottomLeftRadius = 5,
+                    borderBottomRightRadius = 5
+                }
+            };
 
-            hintLabel = new Label("Нажмите E");
-            hintLabel.style.fontSize = 24;
-            hintLabel.style.color = Color.white;
-            hintLabel.style.unityTextAlign = TextAnchor.MiddleCenter;
-            hintLabel.style.width = Length.Percent(100);
-            hintLabel.style.height = Length.Percent(100);
-            hintLabel.style.marginTop = 0;
-            hintLabel.style.marginBottom = 0;
-            hintLabel.style.marginLeft = 0;
-            hintLabel.style.marginRight = 0;
+            _hintLabel = new Label("Нажмите E") {
+                style = {
+                    fontSize = 24,
+                    color = Color.white,
+                    unityTextAlign = TextAnchor.MiddleCenter,
+                    width = Length.Percent(100),
+                    height = Length.Percent(100),
+                    marginTop = 0,
+                    marginBottom = 0,
+                    marginLeft = 0,
+                    marginRight = 0
+                }
+            };
 
-            hintElement.Add(hintLabel);
-            root.Add(hintElement);
+            _hintElement.Add(_hintLabel);
+            root.Add(_hintElement);
         } else {
-            hintLabel = hintElement.Q<Label>();
-            if (hintLabel == null) {
-                hintLabel = new Label("Нажмите E");
-                hintLabel.style.fontSize = 24;
-                hintLabel.style.color = Color.white;
-                hintLabel.style.unityTextAlign = TextAnchor.MiddleCenter;
-                hintLabel.style.width = Length.Percent(100);
-                hintLabel.style.height = Length.Percent(100);
-                hintElement.Add(hintLabel);
+            _hintLabel = _hintElement.Q<Label>();
+            if (_hintLabel == null) {
+                _hintLabel = new Label("Нажмите E") {
+                    style = {
+                        fontSize = 24,
+                        color = Color.white,
+                        unityTextAlign = TextAnchor.MiddleCenter,
+                        width = Length.Percent(100),
+                        height = Length.Percent(100)
+                    }
+                };
+                _hintElement.Add(_hintLabel);
             }
         }
 
-        uiReady = true;
+        _uiReady = true;
     }
 
     private void OnEnable() {
-        interactAction?.Enable();
-        interactAction.performed += OnInteract;
+        _interactAction?.Enable();
+        _interactAction.performed += OnInteract;
     }
 
     private void OnDisable() {
-        interactAction.performed -= OnInteract;
-        interactAction?.Disable();
+        _interactAction.performed -= OnInteract;
+        _interactAction?.Disable();
     }
 
     private void Update() {
-        if (!uiReady) {
+        if (!_uiReady) {
             return;
         }
 
@@ -142,9 +151,9 @@ public class ItemPickup : MonoBehaviour {
 
     private void CheckForNearbyItems() {
         MainGameConfig config = ConfigManager.Config;
-        float pickupDistance = config != null ? config.pickupDistance : 2f;
+        float pickupDistance = config != null ? config.PickupDistance : 2f;
 
-        int layerMask = itemLayer.value != 0 ? itemLayer.value : -1;
+        int layerMask = _itemLayer.value != 0 ? _itemLayer.value : -1;
 
         Collider[] colliders = Physics.OverlapSphere(transform.position, pickupDistance, layerMask);
         CollectableItem closestItem = null;
@@ -163,9 +172,9 @@ public class ItemPickup : MonoBehaviour {
 
         CollectableItem newNearbyItem = closestItem;
 
-        if (newNearbyItem != nearbyItem) {
-            if (nearbyItem != null) {
-                ItemOutline outline = nearbyItem.GetComponent<ItemOutline>();
+        if (newNearbyItem != _nearbyItem) {
+            if (_nearbyItem != null) {
+                ItemOutline outline = _nearbyItem.GetComponent<ItemOutline>();
                 if (outline != null) {
                     outline.HideOutline();
                 }
@@ -180,12 +189,12 @@ public class ItemPickup : MonoBehaviour {
                 outline.ShowOutline();
             }
 
-            nearbyItem = newNearbyItem;
+            _nearbyItem = newNearbyItem;
         }
     }
 
     private void UpdateHint() {
-        if (hintElement == null || !uiReady || uiDocument == null) {
+        if (_hintElement == null || !_uiReady || _uiDocument == null) {
             return;
         }
 
@@ -193,21 +202,21 @@ public class ItemPickup : MonoBehaviour {
         if (config != null && config.IsInventoryBlockingView) {
             InventoryUI inventoryUI = FindObjectOfType<InventoryUI>();
             if (inventoryUI != null && inventoryUI.IsOpen()) {
-                hintElement.style.display = DisplayStyle.None;
+                _hintElement.style.display = DisplayStyle.None;
                 return;
             }
         }
 
-        if (nearbyItem != null && Camera.main != null) {
-            float hintHeight = config != null ? config.pickupHintHeight : 0.75f;
-            Vector3 worldPosition = nearbyItem.transform.position + Vector3.up * hintHeight;
+        if (_nearbyItem != null && Camera.main != null) {
+            float hintHeight = config != null ? config.PickupHintHeight : 0.75f;
+            Vector3 worldPosition = _nearbyItem.transform.position + Vector3.up * hintHeight;
             Vector3 screenPosition = Camera.main.WorldToScreenPoint(worldPosition);
 
             if (screenPosition.z > 0) {
-                VisualElement root = uiDocument.rootVisualElement;
+                VisualElement root = _uiDocument.rootVisualElement;
 
-                float elementWidth = hintElement.resolvedStyle.width;
-                float elementHeight = hintElement.resolvedStyle.height;
+                float elementWidth = _hintElement.resolvedStyle.width;
+                float elementHeight = _hintElement.resolvedStyle.height;
 
                 if (elementWidth == 0) {
                     elementWidth = 200;
@@ -237,50 +246,50 @@ public class ItemPickup : MonoBehaviour {
                 float x = screenX * scaleX - elementWidth * 0.5f;
                 float y = screenY * scaleY - elementHeight;
 
-                hintElement.style.display = DisplayStyle.Flex;
-                hintElement.style.left = x;
-                hintElement.style.top = y;
+                _hintElement.style.display = DisplayStyle.Flex;
+                _hintElement.style.left = x;
+                _hintElement.style.top = y;
             } else {
-                hintElement.style.display = DisplayStyle.None;
+                _hintElement.style.display = DisplayStyle.None;
             }
         } else {
-            hintElement.style.display = DisplayStyle.None;
+            _hintElement.style.display = DisplayStyle.None;
         }
     }
 
     private void OnInteract(InputAction.CallbackContext context) {
-        if (nearbyItem == null || inventory == null) {
+        if (_nearbyItem == null || _inventory == null) {
             return;
         }
 
-        ItemData itemData = nearbyItem.GetItemData();
+        ItemData itemData = _nearbyItem.GetItemData();
         if (itemData == null) {
             return;
         }
 
-        if (inventory.AddItem(itemData, 1)) {
-            ItemOutline outline = nearbyItem.GetComponent<ItemOutline>();
+        if (_inventory.AddItem(itemData)) {
+            ItemOutline outline = _nearbyItem.GetComponent<ItemOutline>();
             if (outline != null) {
                 outline.HideOutline();
             }
 
-            nearbyItem.Pickup();
+            _nearbyItem.Pickup();
 
-            if (itemSpawner != null) {
-                itemSpawner.SpawnItemAtRandomPosition(itemData);
+            if (_itemSpawner != null) {
+                _itemSpawner.SpawnItemAtRandomPosition(itemData);
             }
 
-            nearbyItem = null;
+            _nearbyItem = null;
         } else {
-            if (notification != null) {
-                notification.Show();
+            if (_notification != null) {
+                _notification.Show();
             }
         }
     }
 
     private void OnDrawGizmosSelected() {
         MainGameConfig config = ConfigManager.Config;
-        float pickupDistance = config != null ? config.pickupDistance : 2f;
+        float pickupDistance = config != null ? config.PickupDistance : 2f;
         Gizmos.color = Color.yellow;
         Gizmos.DrawWireSphere(transform.position, pickupDistance);
     }

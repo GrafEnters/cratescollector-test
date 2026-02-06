@@ -1,22 +1,22 @@
-using UnityEngine;
+using System;
 
-[System.Serializable]
+[Serializable]
 public class InventorySlot {
-    public ItemData item;
-    public int quantity;
+    public ItemData Item;
+    public int Quantity;
 
     public InventorySlot() {
-        item = null;
-        quantity = 0;
+        Item = null;
+        Quantity = 0;
     }
 
     public InventorySlot(ItemData item, int quantity) {
-        this.item = item;
-        this.quantity = quantity;
+        Item = item;
+        Quantity = quantity;
     }
 
     public bool IsEmpty() {
-        return item == null || quantity <= 0;
+        return Item == null || Quantity <= 0;
     }
 
     public bool CanAdd(int amount) {
@@ -24,29 +24,29 @@ public class InventorySlot {
             return false;
         }
 
-        if (!item.stackable) {
+        if (!Item.Stackable) {
             return false;
         }
 
-        return quantity + amount <= item.maxStack;
+        return Quantity + amount <= Item.MaxStack;
     }
 
     public void Add(int amount) {
         if (CanAdd(amount)) {
-            quantity += amount;
+            Quantity += amount;
         }
     }
 
     public void Remove(int amount) {
-        quantity -= amount;
-        if (quantity <= 0) {
-            item = null;
-            quantity = 0;
+        Quantity -= amount;
+        if (Quantity <= 0) {
+            Item = null;
+            Quantity = 0;
         }
     }
 
     public void Clear() {
-        item = null;
-        quantity = 0;
+        Item = null;
+        Quantity = 0;
     }
 }
