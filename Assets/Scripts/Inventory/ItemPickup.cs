@@ -1,6 +1,7 @@
 using UnityEngine;
 using UnityEngine.InputSystem;
 using UnityEngine.UIElements;
+using System.Collections;
 
 public class ItemPickup : MonoBehaviour
 {
@@ -14,6 +15,7 @@ public class ItemPickup : MonoBehaviour
     private Inventory inventory;
     private UIDocument uiDocument;
     private ItemSpawner itemSpawner;
+    private bool uiReady = false;
 
     private void Awake()
     {
@@ -26,17 +28,46 @@ public class ItemPickup : MonoBehaviour
         itemSpawner = FindObjectOfType<ItemSpawner>();
 
         interactAction = new InputAction("Interact", InputActionType.Button, "<Keyboard>/e");
-
-        SetupUI();
     }
 
-    private void SetupUI()
+    private void Start()
     {
-        uiDocument = FindObjectOfType<UIDocument>();
+        StartCoroutine(SetupUICoroutine());
+    }
+
+    private IEnumerator SetupUICoroutine()
+    {
+        yield return null;
+        yield return null;
+
+        UIDocument[] allUIDocuments = FindObjectsOfType<UIDocument>();
+        foreach (UIDocument doc in allUIDocuments)
+        {
+            if (doc.rootVisualElement != null)
+            {
+                uiDocument = doc;
+                break;
+            }
+        }
+
         if (uiDocument == null)
         {
-            GameObject uiObject = new GameObject("UI");
+            GameObject uiObject = new GameObject("PickupHintUI");
             uiDocument = uiObject.AddComponent<UIDocument>();
+            yield return null;
+            yield return null;
+        }
+
+        int attempts = 0;
+        while (uiDocument.rootVisualElement == null && attempts < 10)
+        {
+            yield return null;
+            attempts++;
+        }
+
+        if (uiDocument.rootVisualElement == null)
+        {
+            yield break;
         }
 
         VisualElement root = uiDocument.rootVisualElement;
@@ -49,8 +80,20 @@ public class ItemPickup : MonoBehaviour
             hintElement.style.position = Position.Absolute;
             hintElement.style.width = 200;
             hintElement.style.height = 50;
-            hintElement.style.backgroundColor = new Color(0, 0, 0, 0.7f);
+            hintElement.style.backgroundColor = new Color(0, 0, 0, 0.9f);
             hintElement.style.display = DisplayStyle.None;
+            hintElement.style.borderTopWidth = 2;
+            hintElement.style.borderBottomWidth = 2;
+            hintElement.style.borderLeftWidth = 2;
+            hintElement.style.borderRightWidth = 2;
+            hintElement.style.borderTopColor = new Color(1, 1, 1, 0.8f);
+            hintElement.style.borderBottomColor = new Color(1, 1, 1, 0.8f);
+            hintElement.style.borderLeftColor = new Color(1, 1, 1, 0.8f);
+            hintElement.style.borderRightColor = new Color(1, 1, 1, 0.8f);
+            hintElement.style.borderTopLeftRadius = 5;
+            hintElement.style.borderTopRightRadius = 5;
+            hintElement.style.borderBottomLeftRadius = 5;
+            hintElement.style.borderBottomRightRadius = 5;
 
             hintLabel = new Label("Нажмите E");
             hintLabel.style.fontSize = 24;
@@ -58,6 +101,10 @@ public class ItemPickup : MonoBehaviour
             hintLabel.style.unityTextAlign = TextAnchor.MiddleCenter;
             hintLabel.style.width = Length.Percent(100);
             hintLabel.style.height = Length.Percent(100);
+            hintLabel.style.marginTop = 0;
+            hintLabel.style.marginBottom = 0;
+            hintLabel.style.marginLeft = 0;
+            hintLabel.style.marginRight = 0;
 
             hintElement.Add(hintLabel);
             root.Add(hintElement);
@@ -65,7 +112,19 @@ public class ItemPickup : MonoBehaviour
         else
         {
             hintLabel = hintElement.Q<Label>();
+            if (hintLabel == null)
+            {
+                hintLabel = new Label("Нажмите E");
+                hintLabel.style.fontSize = 24;
+                hintLabel.style.color = Color.white;
+                hintLabel.style.unityTextAlign = TextAnchor.MiddleCenter;
+                hintLabel.style.width = Length.Percent(100);
+                hintLabel.style.height = Length.Percent(100);
+                hintElement.Add(hintLabel);
+            }
         }
+
+        uiReady = true;
     }
 
     private void OnEnable()
@@ -82,6 +141,8 @@ public class ItemPickup : MonoBehaviour
 
     private void Update()
     {
+        if (!uiReady) return;
+
         CheckForNearbyItems();
         UpdateHint();
     }
@@ -117,20 +178,50 @@ public class ItemPickup : MonoBehaviour
 
     private void UpdateHint()
     {
-        if (nearbyItem != null && hintElement != null)
+        if (hintElement == null || !uiReady || uiDocument == null) return;
+
+        if (nearbyItem != null && Camera.main != null)
         {
-            hintElement.style.display = DisplayStyle.Flex;
-            Vector3 worldPosition = nearbyItem.transform.position + Vector3.up * 1.5f;
+            Vector3 worldPosition = nearbyItem.transform.position + Vector3.up * 0.75f;
             Vector3 screenPosition = Camera.main.WorldToScreenPoint(worldPosition);
-            hintElement.style.left = screenPosition.x - 100;
-            hintElement.style.top = Screen.height - screenPosition.y - 25;
-        }
-        else
-        {
-            if (hintElement != null)
+            
+            if (screenPosition.z > 0)
+            {
+                VisualElement root = uiDocument.rootVisualElement;
+                
+                float elementWidth = hintElement.resolvedStyle.width;
+                float elementHeight = hintElement.resolvedStyle.height;
+                
+                if (elementWidth == 0) elementWidth = 200;
+                if (elementHeight == 0) elementHeight = 50;
+                
+                float panelWidth = root.resolvedStyle.width;
+                float panelHeight = root.resolvedStyle.height;
+                
+                if (panelWidth <= 0) panelWidth = Screen.width;
+                if (panelHeight <= 0) panelHeight = Screen.height;
+                
+                float scaleX = panelWidth / Screen.width;
+                float scaleY = panelHeight / Screen.height;
+                
+                float screenX = screenPosition.x;
+                float screenY = Screen.height - screenPosition.y;
+                
+                float x = screenX * scaleX - elementWidth * 0.5f;
+                float y = screenY * scaleY - elementHeight;
+                
+                hintElement.style.display = DisplayStyle.Flex;
+                hintElement.style.left = x;
+                hintElement.style.top = y;
+            }
+            else
             {
                 hintElement.style.display = DisplayStyle.None;
             }
+        }
+        else
+        {
+            hintElement.style.display = DisplayStyle.None;
         }
     }
 
