@@ -6,6 +6,13 @@ public class ThirdPersonCamera : MonoBehaviour {
 
     private float _currentRotationX;
     private float _currentRotationY;
+    private InventoryStateProvider _inventoryStateProvider;
+    private ConfigProvider _configProvider;
+
+    private void Awake() {
+        _inventoryStateProvider = DIContainer.Instance.Get<IInventoryStateProvider>() as InventoryStateProvider;
+        _configProvider = DIContainer.Instance.Get<IConfigProvider>() as ConfigProvider;
+    }
 
     private void Start() {
         if (_target == null) {
@@ -36,17 +43,16 @@ public class ThirdPersonCamera : MonoBehaviour {
     }
 
     private void HandleRotation() {
-        MainGameConfig config = ConfigManager.Config;
-        if (config != null && config.IsInventoryBlockingView) {
-            InventoryUI inventoryUI = FindObjectOfType<InventoryUI>();
-            if (inventoryUI != null && inventoryUI.IsOpen()) {
+        MainGameConfig config = _configProvider.GetConfig();
+        if (config.IsInventoryBlockingView) {
+            if (_inventoryStateProvider.IsInventoryOpen()) {
                 return;
             }
         }
 
-        float rotationSpeed = config != null ? config.CameraRotationSpeed : 2f;
-        float minVerticalAngle = config != null ? config.CameraMinVerticalAngle : -30f;
-        float maxVerticalAngle = config != null ? config.CameraMaxVerticalAngle : 60f;
+        float rotationSpeed = config.CameraRotationSpeed;
+        float minVerticalAngle = config.CameraMinVerticalAngle;
+        float maxVerticalAngle = config.CameraMaxVerticalAngle;
 
         float mouseX = Input.GetAxis("Mouse X") * rotationSpeed;
         float mouseY = Input.GetAxis("Mouse Y") * rotationSpeed;
@@ -57,9 +63,9 @@ public class ThirdPersonCamera : MonoBehaviour {
     }
 
     private void UpdateCameraPosition() {
-        MainGameConfig config = ConfigManager.Config;
-        float distance = config != null ? config.CameraDistance : 5f;
-        float height = config != null ? config.CameraHeight : 2f;
+        MainGameConfig config = _configProvider.GetConfig();
+        float distance = config.CameraDistance;
+        float height = config.CameraHeight;
 
         Quaternion rotation = Quaternion.Euler(_currentRotationY, _currentRotationX, 0);
         Vector3 direction = rotation * Vector3.back;

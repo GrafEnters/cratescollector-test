@@ -13,22 +13,22 @@ MonoBehaviour:
   m_Name: MainGameConfig
   m_EditorClassIdentifier: Assembly-CSharp::MainGameConfig
   IsInventoryBlockingView: 1
-  playerMoveSpeed: 5
-  playerRotationSpeed: 10
-  inventorySlotCount: 12
-  itemSpawnerItemCount: 6
-  itemSpawnerRadius: 10
-  itemSpawnerMinDistance: 2
-  itemSpawnerMinDistanceFromPlayer: 3
-  itemSpawnerHeight: 0.5
-  itemScale: 0.5
-  itemSpawnerMaxAttempts: 50
-  cameraDistance: 5
-  cameraHeight: 2
-  cameraRotationSpeed: 2
-  cameraMinVerticalAngle: -30
-  cameraMaxVerticalAngle: 60
-  pickupDistance: 2
-  pickupHintHeight: 0.75
-  outlineColor: {r: 0, g: 0, b: 0, a: 0.8}
-  outlineWidth: 10
+  PlayerMoveSpeed: 5
+  PlayerRotationSpeed: 10
+  InventorySlotCount: 12
+  ItemSpawnerItemCount: 6
+  ItemSpawnerRadius: 10
+  ItemSpawnerMinDistance: 2
+  ItemSpawnerMinDistanceFromPlayer: 3
+  ItemSpawnerHeight: 0.5
+  ItemScale: 0.5
+  ItemSpawnerMaxAttempts: 50
+  CameraDistance: 5
+  CameraHeight: 2
+  CameraRotationSpeed: 2
+  CameraMinVerticalAngle: -30
+  CameraMaxVerticalAngle: 60
+  PickupDistance: 2
+  PickupHintHeight: 0.75
+  OutlineColor: {r: 0, g: 0, b: 0, a: 0.8}
+  OutlineWidth: 10

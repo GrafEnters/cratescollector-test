@@ -7,6 +7,11 @@ public class OutlineRenderer : MonoBehaviour {
     private Material _outlineMaterial;
     private Material _edgeDetectionMaterial;
     private CommandBuffer _commandBuffer;
+    private ConfigProvider _configProvider;
+
+    private void Awake() {
+        _configProvider = DIContainer.Instance.Get<IConfigProvider>() as ConfigProvider;
+    }
 
     private void Start() {
         _mainCamera = GetComponent<Camera>();
@@ -76,11 +81,9 @@ public class OutlineRenderer : MonoBehaviour {
             return;
         }
 
-        MainGameConfig config = ConfigManager.Config;
-        if (config != null) {
-            _edgeDetectionMaterial.SetColor("_OutlineColor", config.OutlineColor);
-            _edgeDetectionMaterial.SetFloat("_OutlineWidth", config.OutlineWidth);
-        }
+        MainGameConfig config = _configProvider.GetConfig();
+        _edgeDetectionMaterial.SetColor("_OutlineColor", config.OutlineColor);
+        _edgeDetectionMaterial.SetFloat("_OutlineWidth", config.OutlineWidth);
     }
 
     private void OnPreRender() {

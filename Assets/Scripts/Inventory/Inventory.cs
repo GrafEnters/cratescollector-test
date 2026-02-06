@@ -3,12 +3,17 @@ using UnityEngine;
 
 public class Inventory : MonoBehaviour {
     private InventorySlot[] _slots;
+    private ItemVisualFactory _itemFactory;
+    private ConfigProvider _configProvider;
 
     public event Action<int> OnSlotChanged;
 
     private void Awake() {
-        MainGameConfig config = ConfigManager.Config;
-        int slotCount = config != null ? config.InventorySlotCount : 12;
+        _configProvider = DIContainer.Instance.Get<IConfigProvider>() as ConfigProvider;
+        _itemFactory = DIContainer.Instance.Get<IItemFactory>() as ItemVisualFactory;
+
+        MainGameConfig config = _configProvider.GetConfig();
+        int slotCount = config.InventorySlotCount;
         _slots = new InventorySlot[slotCount];
         for (int i = 0; i < slotCount; i++) {
             _slots[i] = new InventorySlot();
@@ -126,27 +131,10 @@ public class Inventory : MonoBehaviour {
         }
 
         ItemData item = _slots[slotIndex].Item;
-
-        GameObject droppedItem = GameObject.CreatePrimitive(PrimitiveType.Cube);
-        droppedItem.transform.position = position;
-        MainGameConfig config = ConfigManager.Config;
-        float itemScale = config != null ? config.ItemScale : 0.5f;
-        droppedItem.transform.localScale = Vector3.one * itemScale;
-        droppedItem.name = item.Name;
-
-        MeshRenderer renderer = droppedItem.GetComponent<MeshRenderer>();
-        Material mat = new(Shader.Find("Standard")) {
-            color = item.Color
-        };
-        renderer.material = mat;
-
-        CollectableItem collectable = droppedItem.AddComponent<CollectableItem>();
-        collectable.SetItemData(item);
-
-        droppedItem.AddComponent<ItemOutline>();
-
-        Collider collider = droppedItem.GetComponent<Collider>();
-        collider.isTrigger = true;
+        GameObject droppedItem = _itemFactory.CreateItem(item, position);
+        if (droppedItem == null) {
+            return false;
+        }
 
         RemoveItem(slotIndex);
         return true;

@@ -11,6 +11,8 @@ public class PlayerController : MonoBehaviour {
     private Vector2 _moveInput;
     private Vector3 _velocity;
     private Bounds _platformBounds;
+    private InventoryStateProvider _inventoryStateProvider;
+    private ConfigProvider _configProvider;
 
     private void Awake() {
         _characterController = GetComponent<CharacterController>();
@@ -23,6 +25,9 @@ public class PlayerController : MonoBehaviour {
                 _cameraTransform = mainCamera.transform;
             }
         }
+
+        _inventoryStateProvider = DIContainer.Instance.Get<IInventoryStateProvider>() as InventoryStateProvider;
+        _configProvider = DIContainer.Instance.Get<IConfigProvider>() as ConfigProvider;
 
         _moveAction = new InputAction(type: InputActionType.Value);
         _moveAction.AddCompositeBinding("2DVector").With("Up", "<Keyboard>/w").With("Down", "<Keyboard>/s").With("Left", "<Keyboard>/a")
@@ -108,10 +113,9 @@ public class PlayerController : MonoBehaviour {
     }
 
     private void HandleMovement() {
-        MainGameConfig config = ConfigManager.Config;
-        if (config != null && config.IsInventoryBlockingView) {
-            InventoryUI inventoryUI = FindObjectOfType<InventoryUI>();
-            if (inventoryUI != null && inventoryUI.IsOpen()) {
+        MainGameConfig config = _configProvider.GetConfig();
+        if (config.IsInventoryBlockingView) {
+            if (_inventoryStateProvider.IsInventoryOpen()) {
                 return;
             }
         }
@@ -141,7 +145,7 @@ public class PlayerController : MonoBehaviour {
         }
 
         if (moveDirection.magnitude > 0.1f) {
-            float moveSpeed = config != null ? config.PlayerMoveSpeed : 5f;
+            float moveSpeed = config.PlayerMoveSpeed;
             Vector3 move = moveDirection * moveSpeed;
             _velocity.x = move.x;
             _velocity.z = move.z;
@@ -183,8 +187,8 @@ public class PlayerController : MonoBehaviour {
             Vector3 moveDirection = (forward * _moveInput.y + right * _moveInput.x).normalized;
 
             if (moveDirection.magnitude > 0.1f) {
-                MainGameConfig config = ConfigManager.Config;
-                float rotationSpeed = config != null ? config.PlayerRotationSpeed : 10f;
+                MainGameConfig config = _configProvider.GetConfig();
+                float rotationSpeed = config.PlayerRotationSpeed;
                 Quaternion targetRotation = Quaternion.LookRotation(moveDirection);
                 transform.rotation = Quaternion.Slerp(transform.rotation, targetRotation, rotationSpeed * Time.deltaTime);
             }

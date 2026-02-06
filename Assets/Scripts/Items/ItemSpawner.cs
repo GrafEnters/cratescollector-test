@@ -3,6 +3,13 @@ using UnityEngine;
 
 public class ItemSpawner : MonoBehaviour {
     private readonly List<ItemData> _itemsData = new();
+    private ItemVisualFactory _itemFactory;
+    private ConfigProvider _configProvider;
+
+    private void Awake() {
+        _itemFactory = DIContainer.Instance.Get<IItemFactory>() as ItemVisualFactory;
+        _configProvider = DIContainer.Instance.Get<IConfigProvider>() as ConfigProvider;
+    }
 
     private void Start() {
         LoadItemsData();
@@ -35,8 +42,8 @@ public class ItemSpawner : MonoBehaviour {
 
         List<Vector3> spawnedPositions = new();
         int spawnedCount = 0;
-        MainGameConfig config = ConfigManager.Config;
-        int itemCount = config != null ? config.ItemSpawnerItemCount : 6;
+        MainGameConfig config = _configProvider.GetConfig();
+        int itemCount = config.ItemSpawnerItemCount;
 
         while (spawnedCount < itemCount && spawnedCount < _itemsData.Count) {
             Vector3 position = GetRandomPosition(spawnedPositions);
@@ -52,12 +59,12 @@ public class ItemSpawner : MonoBehaviour {
     }
 
     private Vector3 GetRandomPosition(List<Vector3> existingPositions, Vector3? playerPosition = null) {
-        MainGameConfig config = ConfigManager.Config;
-        float spawnRadius = config != null ? config.ItemSpawnerRadius : 10f;
-        float minDistance = config != null ? config.ItemSpawnerMinDistance : 2f;
-        float minDistanceFromPlayer = config != null ? config.ItemSpawnerMinDistanceFromPlayer : 3f;
-        float spawnHeight = config != null ? config.ItemSpawnerHeight : 0.5f;
-        int attempts = config != null ? config.ItemSpawnerMaxAttempts : 50;
+        MainGameConfig config = _configProvider.GetConfig();
+        float spawnRadius = config.ItemSpawnerRadius;
+        float minDistance = config.ItemSpawnerMinDistance;
+        float minDistanceFromPlayer = config.ItemSpawnerMinDistanceFromPlayer;
+        float spawnHeight = config.ItemSpawnerHeight;
+        int attempts = config.ItemSpawnerMaxAttempts;
 
         for (int i = 0; i < attempts; i++) {
             Vector2 randomCircle = Random.insideUnitCircle * spawnRadius;
@@ -88,26 +95,7 @@ public class ItemSpawner : MonoBehaviour {
     }
 
     private void SpawnItem(ItemData itemData, Vector3 position) {
-        GameObject itemObject = GameObject.CreatePrimitive(PrimitiveType.Cube);
-        itemObject.transform.position = position;
-        MainGameConfig config = ConfigManager.Config;
-        float itemScale = config != null ? config.ItemScale : 0.5f;
-        itemObject.transform.localScale = Vector3.one * itemScale;
-        itemObject.name = itemData.Name;
-
-        MeshRenderer renderer = itemObject.GetComponent<MeshRenderer>();
-        Material mat = new(Shader.Find("Standard")) {
-            color = itemData.Color
-        };
-        renderer.material = mat;
-
-        Collider collider = itemObject.GetComponent<Collider>();
-        collider.isTrigger = true;
-
-        CollectableItem collectable = itemObject.AddComponent<CollectableItem>();
-        collectable.SetItemData(itemData);
-
-        itemObject.AddComponent<ItemOutline>();
+        _itemFactory.CreateItem(itemData, position);
     }
 
     public void SpawnItemAtRandomPosition(ItemData itemData) {
