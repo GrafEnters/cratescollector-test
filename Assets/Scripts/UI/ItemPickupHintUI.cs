@@ -23,7 +23,7 @@ public class ItemPickupHintUI : MonoBehaviour {
         yield return null;
         yield return null;
 
-        UIDocument[] allUIDocuments = FindObjectsOfType<UIDocument>();
+        UIDocument[] allUIDocuments = FindObjectsByType<UIDocument>(FindObjectsSortMode.None);
         foreach (UIDocument doc in allUIDocuments) {
             if (doc.rootVisualElement != null) {
                 _uiDocument = doc;

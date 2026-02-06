@@ -6,7 +6,7 @@ public class InventoryStateProvider : MonoBehaviour, IInventoryStateProvider {
     private void Awake() {
         _inventoryUI = GetComponent<InventoryUI>();
         if (_inventoryUI == null) {
-            _inventoryUI = FindObjectOfType<InventoryUI>();
+            _inventoryUI = FindAnyObjectByType<InventoryUI>();
         }
     }
 

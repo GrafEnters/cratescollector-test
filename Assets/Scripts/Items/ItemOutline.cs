@@ -27,7 +27,7 @@ public class ItemOutline : MonoBehaviour {
     private void EnsureOutlineRenderer() {
         Camera mainCamera = Camera.main;
         if (mainCamera == null) {
-            mainCamera = FindObjectOfType<Camera>();
+            mainCamera = FindAnyObjectByType<Camera>();
         }
 
         if (mainCamera != null && mainCamera.GetComponent<OutlineRenderer>() == null) {

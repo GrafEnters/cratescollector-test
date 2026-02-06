@@ -25,7 +25,7 @@ public class InventoryUI : MonoBehaviour {
     private void Awake() {
         _inventory = GetComponent<Inventory>();
         if (_inventory == null) {
-            _inventory = FindObjectOfType<Inventory>();
+            _inventory = FindAnyObjectByType<Inventory>();
         }
 
         if (_uiDocument == null) {

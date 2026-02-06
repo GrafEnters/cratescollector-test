@@ -118,7 +118,7 @@ public class ItemSpawner : MonoBehaviour {
 
     private List<Vector3> GetAllItemPositions() {
         List<Vector3> positions = new();
-        CollectableItem[] items = FindObjectsOfType<CollectableItem>();
+        CollectableItem[] items = FindObjectsByType<CollectableItem>(FindObjectsSortMode.None);
         foreach (CollectableItem item in items) {
             positions.Add(item.transform.position);
         }

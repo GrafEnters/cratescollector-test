@@ -65,7 +65,7 @@ public class OutlineRenderer : MonoBehaviour {
         _commandBuffer.SetRenderTarget(_outlineTexture);
         _commandBuffer.ClearRenderTarget(true, true, Color.clear);
 
-        ItemOutline[] outlinedItems = FindObjectsOfType<ItemOutline>();
+        ItemOutline[] outlinedItems = FindObjectsByType<ItemOutline>(FindObjectsSortMode.None);
         foreach (ItemOutline item in outlinedItems) {
             if (item.IsOutlined()) {
                 MeshFilter filter = item.GetComponent<MeshFilter>();
